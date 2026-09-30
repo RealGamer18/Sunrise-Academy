@@ -70,9 +70,11 @@
     const b = boardFor(G.g.loc.r, G.g.day); const enter = !boardWasOpen && !RM(); boardWasOpen = true;
     const mine = G.g.quests.length;
     return `<div class="card qboard ${enter ? "enter" : ""}"><div class="qb-head"><h3>📜 ${L("Tablón de misiones", "Quest board")} · ${esc(regionName(G.g.loc.r))}</h3><small class="muted">${L("Día", "Day")} ${G.g.day} · ${L("se renueva cada día", "renews daily")}${mine ? ` · ${mine} ${L("aceptada(s): mira la pestaña Bolsa", "accepted: see the Bag tab")}` : ""}</small></div>
-      <div class="qb-wood">${b.length ? b.map((q, i) => { const has = G.g.quests.some((x) => x.id === q.id); const [rr, pp] = q.place.split(":"); const just = justAcc && justAcc.id === q.id && Date.now() - justAcc.at < 1600;
-        return `<div class="qnote ${has ? "taken" : ""} ${just ? "stampin" : ""}" data-qnote="${esc(q.id)}" style="--rot:${[-3, 2, -1.5, 3][i % 4]}deg;animation-delay:${(i * 0.12).toFixed(2)}s"><i class="pin"></i>
-          <b>${esc(q.t)}</b><small>📍 ${esc(P[rr]?.[+pp]?.n || "")}</small>
+      <div class="qb-wood">${b.length ? b.map((q, i) => { const has = G.g.quests.some((x) => x.id === q.id); const [rr, pp] = String(q.place || q.dest || ":").split(":"); const just = justAcc && justAcc.id === q.id && Date.now() - justAcc.at < 1600;
+        const qi = window.SA_QINFO ? window.SA_QINFO(q) : null;
+        return `<div class="qnote ${has ? "taken" : ""} ${just ? "stampin" : ""} ${qi?.wanted ? "wanted" : ""}" data-qnote="${esc(q.id)}" style="--rot:${[-3, 2, -1.5, 3][i % 4]}deg;animation-delay:${(i * 0.12).toFixed(2)}s"><i class="pin"></i>
+          ${qi ? `<span class="qtype">${qi.i} ${esc(qi.l)}</span>` : ""}
+          ${qi?.wanted ? `<div class="wface">${typeof monIcon === "function" ? monIcon({ n: qi.mon, img: qi.mon }) : ""}<b>«${esc(qi.ap)}»</b></div><small>${esc(qi.mon)} · ${L("Nv", "Lv")} ${q.lvl}</small>` : `<b>${esc(q.t)}</b>`}<small>📍 ${esc(qi ? qi.where : P[rr]?.[+pp]?.n || "")}</small>
           <div class="qrw"><span>☀ ${q.soles}</span><span>✨ ${q.xp} XP</span><span>⭐ ${q.fama} ${L("Fama", "Fame")}</span><span>🎲 50% +1 ${L("afinidad", "affinity")}</span></div>
           ${has ? `<span class="stamp">${L("ACEPTADA", "ACCEPTED")}</span>` : `<button type="button" class="btn small primary" data-quest="${esc(q.id)}">✍️ ${L("Aceptar", "Accept")}</button>`}</div>`; }).join("") : `<p class="muted">${L("No hay misiones hoy.", "No quests today.")}</p>`}</div></div>`;
   };
@@ -98,10 +100,10 @@
   // 3. TIENDA POR CATEGORÍAS
   // =====================================================================
   const CATS = [
-    ["pociones", "🧪", () => L("Pociones", "Potions"), (s) => ["potion", "mana", "energy"].includes(s.kind)],
-    ["armas", "⚔️", () => L("Armas", "Weapons"), (s) => s.kind === "weapon" && !WEAPON_AFF[s.n]],
-    ["magicas", "✨", () => L("Armas mágicas", "Magic weapons"), (s) => s.kind === "weapon" && !!WEAPON_AFF[s.n]],
-    ["especial", "📜", () => L("Especiales", "Special"), (s) => !["potion", "mana", "energy", "weapon"].includes(s.kind)],
+    ["pociones", "🧪", () => L("Pociones", "Potions"), (s) => !s.craft && ["potion", "mana", "energy"].includes(s.kind)],
+    ["armas", "⚔️", () => L("Armas", "Weapons"), (s) => !s.craft && s.kind === "weapon" && !WEAPON_AFF[s.n]],
+    ["magicas", "✨", () => L("Armas mágicas", "Magic weapons"), (s) => !s.craft && s.kind === "weapon" && !!WEAPON_AFF[s.n]],
+    ["especial", "📜", () => L("Especiales", "Special"), (s) => !s.craft && !["potion", "mana", "energy", "weapon"].includes(s.kind)],
   ];
   const KICON = { potion: "❤️", mana: "💧", energy: "⚡", weapon: "🗡️", respec: "📜" };
   const AFC = { Fuego: "#ff7a2e", Agua: "#4fb3ff", Tierra: "#c79a55", Aire: "#9fe6ff", Rayo: "#ffe14d", Luz: "#fff2a8", Sombra: "#9b5cff" };

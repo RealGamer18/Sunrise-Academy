@@ -22,32 +22,68 @@
   // =====================================================================
   // 1. ARMADURAS Y ACCESORIOS (son objetos de la bolsa: se pueden intercambiar)
   // =====================================================================
-  // s: armadura|accesorio · def, pv, dmg, init, xp (fracción), mana · p: precio · at: tienda ("drop" = solo botín)
+  // s: tipo de ranura (cabeza, hombros, pecho, manos, pies, capa, cuello, anillo, amuleto, escudo)
+  // def, pv, dmg, init, xp (fracción), mana · p: precio · at: tienda ("drop" = solo botín) · r: rareza c/r/e/l
   const WEAR = {
-    "Túnica acolchada": { s: "armadura", def: 1, pv: 10, p: 60, at: "alba:0" }, "Cuero de lobo": { s: "armadura", def: 1, pv: 20, p: 140, at: "verde:0" },
-    "Cota de mallas": { s: "armadura", def: 2, pv: 25, p: 260, at: "llan:0" }, "Coraza de coral": { s: "armadura", def: 2, pv: 40, p: 380, at: "costa:0" },
-    "Armadura enana": { s: "armadura", def: 3, pv: 50, p: 520, at: "esc:1" }, "Placas de obsidiana": { s: "armadura", def: 4, pv: 70, p: 800, at: "quem:0" },
-    "Manto del velo": { s: "armadura", def: 3, pv: 60, init: 2, p: 780, at: "viol:0" }, "Armadura real": { s: "armadura", def: 5, pv: 90, p: 1100, at: "cap:1" },
-    "Escamas de dragón": { s: "armadura", def: 6, pv: 120, p: 1500, at: "drop" }, "Coraza del Titán": { s: "armadura", def: 6, pv: 140, dmg: 2, p: 1800, at: "drop" }, "Armadura del Umbral": { s: "armadura", def: 7, pv: 160, p: 2200, at: "drop" },
-    "Anillo de cobre": { s: "accesorio", dmg: 1, p: 40, at: "alba:0" }, "Amuleto del alba": { s: "accesorio", def: 1, init: 1, p: 90, at: "drop" }, "Amuleto del viento": { s: "accesorio", init: 2, p: 120, at: "verde:0" },
-    "Colgante de la suerte": { s: "accesorio", xp: 0.05, p: 200, at: "llan:0" }, "Perla de marea": { s: "accesorio", mana: 40, p: 250, at: "costa:0" }, "Anillo de Valcor": { s: "accesorio", dmg: 2, pv: 20, p: 300, at: "drop" },
-    "Anillo rúnico": { s: "accesorio", dmg: 3, p: 450, at: "esc:1" }, "Brazalete de brasa": { s: "accesorio", dmg: 4, p: 600, at: "quem:0" }, "Ojo del velo": { s: "accesorio", init: 3, xp: 0.05, p: 700, at: "viol:0" },
-    "Sello del gremio": { s: "accesorio", xp: 0.1, p: 900, at: "cap:1" }, "Corazón de dragón": { s: "accesorio", dmg: 5, pv: 50, p: 1400, at: "drop" }, "Corona del Relojero": { s: "accesorio", dmg: 6, init: 3, p: 2000, at: "drop" },
-    "Lágrima de estrella": { s: "accesorio", xp: 0.15, mana: 100, p: 1800, at: "drop" },
+    "Túnica acolchada": { s: "pecho", def: 1, pv: 10, p: 60, at: "alba:0" }, "Cuero de lobo": { s: "pecho", def: 1, pv: 20, p: 140, at: "verde:0" },
+    "Cota de mallas": { s: "pecho", def: 2, pv: 25, p: 260, at: "llan:0" }, "Coraza de coral": { s: "pecho", def: 2, pv: 40, p: 380, at: "costa:0" },
+    "Armadura enana": { s: "pecho", def: 3, pv: 50, p: 520, at: "esc:1" }, "Placas de obsidiana": { s: "pecho", def: 4, pv: 70, p: 800, at: "quem:0" },
+    "Coraza del pantano": { s: "pecho", def: 4, pv: 65, p: 820, at: "viol:0" }, "Armadura real": { s: "pecho", def: 5, pv: 90, p: 1100, at: "cap:1" }, "Armadura estelar": { s: "pecho", def: 6, pv: 140, p: 1900, at: "lost:0" },
+    "Manto del velo": { s: "capa", def: 2, pv: 30, init: 2, p: 780, at: "viol:0" },
+    "Anillo de cobre": { s: "anillo", dmg: 1, p: 40, at: "alba:0" }, "Amuleto del viento": { s: "cuello", init: 2, pv: 10, p: 120, at: "verde:0" },
+    "Colgante de la suerte": { s: "cuello", xp: 0.05, pv: 15, p: 200, at: "llan:0" }, "Perla de marea": { s: "amuleto", mana: 40, p: 250, at: "costa:0" },
+    "Anillo rúnico": { s: "anillo", dmg: 3, p: 450, at: "esc:1" }, "Ojo del velo": { s: "amuleto", init: 3, xp: 0.05, p: 700, at: "viol:0" }, "Sello del gremio": { s: "amuleto", xp: 0.1, p: 900, at: "cap:1" },
+    // botín (épico / legendario)
+    "Amuleto del alba": { s: "cuello", def: 1, init: 1, pv: 10, p: 90, at: "drop", r: "e" }, "Anillo de Valcor": { s: "anillo", dmg: 2, pv: 20, p: 300, at: "drop", r: "e" },
+    "Brazalete de brasa": { s: "manos", dmg: 4, p: 600, at: "drop", r: "e" }, "Escamas de dragón": { s: "pecho", def: 6, pv: 120, p: 1500, at: "drop", r: "e" },
+    "Corazón de dragón": { s: "amuleto", dmg: 5, pv: 50, p: 1400, at: "drop", r: "e" }, "Yelmo del Minotauro": { s: "cabeza", def: 3, pv: 40, dmg: 1, p: 700, at: "drop", r: "e" },
+    "Capa de la Capitana": { s: "capa", def: 2, init: 3, pv: 30, p: 900, at: "drop", r: "e" }, "Botas del Viento Norte": { s: "pies", init: 4, def: 1, p: 850, at: "drop", r: "e" },
+    "Hombreras del Rey Trol": { s: "hombros", def: 3, pv: 70, p: 1000, at: "drop", r: "e" }, "Escudo del Gólem": { s: "escudo", def: 5, pv: 40, p: 900, at: "drop", r: "e" },
+    "Anillo de la Esfinge": { s: "anillo", dmg: 4, xp: 0.05, p: 1100, at: "drop", r: "e" }, "Colgante de la Reina Araña": { s: "cuello", dmg: 2, init: 2, pv: 30, p: 950, at: "drop", r: "e" },
+    "Guanteletes de Pyrax": { s: "manos", dmg: 6, def: 2, p: 1600, at: "drop", r: "e" },
+    "Coraza del Titán": { s: "pecho", def: 6, pv: 140, dmg: 2, p: 1800, at: "drop", r: "l" }, "Armadura del Umbral": { s: "pecho", def: 7, pv: 160, p: 2200, at: "drop", r: "l" },
+    "Corona del Relojero": { s: "cabeza", dmg: 6, init: 3, def: 2, p: 2000, at: "drop", r: "l" }, "Lágrima de estrella": { s: "amuleto", xp: 0.15, mana: 100, p: 1800, at: "drop", r: "l" },
+    "Égida del Amanecer": { s: "escudo", def: 8, pv: 80, p: 2400, at: "drop", r: "l" },
   };
+  // armaduras por región (9 niveles de tienda)
+  const TIER_AT = ["alba:0", "verde:0", "llan:0", "costa:0", "esc:1", "quem:0", "viol:0", "cap:1", "lost:0"];
+  const TMUL = [1, 2.3, 4, 6, 8, 12, 13, 17, 28];
+  const GEN = {
+    cabeza: [40, ["Capucha de cuero", "Casco de hojas", "Yelmo de bronce", "Tricornio de coral", "Yelmo enano", "Casco de obsidiana", "Capucha del velo", "Yelmo real", "Diadema estelar"], (t) => ({ def: Math.ceil(t / 3), pv: 5 * t })],
+    hombros: [35, ["Hombreras de cuero", "Hombreras de corteza", "Hombreras de bronce", "Hombreras de caparazón", "Hombreras de mithril", "Hombreras de magma", "Hombreras de sombra", "Hombreras reales", "Hombreras del cometa"], (t) => ({ def: Math.ceil(t / 3), pv: 4 * t })],
+    manos: [35, ["Guantes de cuero", "Guantes de enredadera", "Guanteletes de bronce", "Guantes de pescador", "Guanteletes enanos", "Guanteletes de ceniza", "Guantes del velo", "Guanteletes reales", "Guantes astrales"], (t) => ({ dmg: Math.ceil(t / 2), def: Math.floor(t / 3) })],
+    pies: [30, ["Botas de viaje", "Botas del bosque", "Grebas de bronce", "Botas de marinero", "Botas de nieve", "Grebas de obsidiana", "Botas de ciénaga", "Grebas reales", "Botas de nube"], (t) => ({ init: Math.ceil(t / 3), def: Math.floor(t / 3), pv: 2 * t })],
+    capa: [35, ["Capa de lana", "Capa de hojas", "Capa del mercader", "Capa de vela", "Capa de piel de yeti", "Capa de ceniza", null, "Capa real", "Capa de las estrellas"], (t) => ({ def: Math.ceil(t / 3), init: Math.floor(t / 3), pv: 3 * t })],
+    cuello: [40, ["Colgante de madera", null, null, "Collar de conchas", "Colgante de plata", "Collar de rubíes", "Gargantilla maldita", "Collar del gremio", "Collar de constelaciones"], (t) => ({ pv: 5 * t, mana: 8 * t })],
+    anillo: [40, [null, "Anillo de raíz", "Anillo de bronce", "Anillo de coral", null, "Anillo de rubí", "Anillo de sombra", "Anillo del rey", "Anillo del cometa"], (t) => ({ dmg: Math.ceil(t / 1.5) })],
+    amuleto: [50, ["Pata de conejo", "Bellota tallada", "Dado de la fortuna", null, "Runa de escarcha", "Brasa eterna", null, null, "Fragmento de estrella"], (t) => ({ xp: Math.min(0.18, 0.02 * t), mana: 10 * t })],
+    escudo: [45, ["Escudo de madera", "Escudo de corteza", "Escudo de bronce", "Escudo de caparazón", "Escudo enano", "Escudo de obsidiana", "Escudo del velo", "Escudo real", "Égida estelar"], (t) => ({ def: Math.ceil(t * 0.6), pv: 3 * t })],
+  };
+  for (const [s, [base, names, st]] of Object.entries(GEN)) names.forEach((n, i) => { if (n && !WEAR[n]) WEAR[n] = { s, ...st(i + 1), p: Math.round(base * TMUL[i]), at: TIER_AT[i], r: i >= 4 ? "r" : "c", t: i + 1 }; });
+  for (const w of Object.values(WEAR)) if (!w.r) w.r = w.p >= 500 ? "r" : "c";
+  const SLOTS = ["cabeza", "hombros", "pecho", "manos", "pies", "capa", "cuello", "anillo1", "anillo2", "amuleto", "escudo"];
+  const slotType = (sl) => (sl.startsWith("anillo") ? "anillo" : sl);
   const wearDesc = (n) => { const w = WEAR[n]; if (!w) return ""; return [w.def && `+${w.def} ${L("Defensa", "Defense")}`, w.pv && `+${w.pv} PV`, w.dmg && `+${w.dmg} ${L("daño", "dmg")}`, w.init && `+${w.init} ${L("iniciativa", "init")}`, w.xp && `+${Math.round(w.xp * 100)}% XP`, w.mana && `+${w.mana} ${L("maná", "mana")}`].filter(Boolean).join(" · "); };
-  const eq = () => (G.g.eq || (G.g.eq = { armadura: null, accesorio: null, pvB: 0, manaB: 0 }));
-  const gear = () => [eq().armadura, eq().accesorio].map((n) => WEAR[n]).filter(Boolean);
+  const OLD_ACC = { "Anillo de cobre": "anillo1", "Anillo rúnico": "anillo1", "Anillo de Valcor": "anillo1", "Brazalete de brasa": "manos", "Corona del Relojero": "cabeza", "Amuleto del alba": "cuello", "Amuleto del viento": "cuello", "Colgante de la suerte": "cuello" };
+  const eq = () => {
+    const e = G.g.eq || (G.g.eq = { pvB: 0, manaB: 0 });
+    if ("armadura" in e || "accesorio" in e) { const a = e.armadura, c = e.accesorio; delete e.armadura; delete e.accesorio; if (a) e[a === "Manto del velo" ? "capa" : "pecho"] = a; if (c) e[OLD_ACC[c] || "amuleto"] = c; }
+    for (const s of SLOTS) if (!(s in e)) e[s] = null;
+    return e;
+  };
+  const heavy = () => (typeof wTraits === "function" ? wTraits(G.g.arma?.n).includes("pesada") : false);
+  const gear = () => SLOTS.filter((s) => !(s === "escudo" && heavy())).map((s) => WEAR[eq()[s]]).filter(Boolean);
   const gsum = (k) => gear().reduce((a, w) => a + (w[k] || 0), 0);
   function applyStats() {
     const e = eq(); const pv = gsum("pv"), mana = gsum("mana");
     if (pv !== e.pvB) { G.pvMax += pv - e.pvB; G.pv = Math.max(1, Math.min(G.pvMax, G.pv + Math.max(0, pv - e.pvB))); e.pvB = pv; }
     if (mana !== e.manaB) { G.manaMax += mana - e.manaB; G.mana = Math.max(0, Math.min(G.manaMax, G.mana + Math.max(0, mana - e.manaB))); e.manaB = mana; }
   }
-  function wear(n) {
+  function wear(n, slot) {
     const w = WEAR[n]; if (!w || !G.g.inv[n] || G.g.combat) return;
-    const e = eq(); const old = e[w.s]; addItem(n, -1); if (old) addItem(old, 1); e[w.s] = n; applyStats();
-    sfx("shield"); toast(L(`Te pusiste ${n}.`, `Equipped ${n}.`)); persist(); render();
+    const e = eq(); if (!slot || slotType(slot) !== w.s) slot = w.s === "anillo" ? (!e.anillo1 ? "anillo1" : !e.anillo2 ? "anillo2" : "anillo1") : w.s;
+    const old = e[slot]; addItem(n, -1); if (old) addItem(old, 1); e[slot] = n; applyStats();
+    sfx("shield"); toast(L(`Te pusiste ${n}.`, `Equipped ${n}.`) + (slot === "escudo" && heavy() ? L(" (con un arma pesada el escudo no cuenta)", " (no effect with heavy weapon)") : "")); persist(); render();
   }
   function unwear(slot) { const e = eq(); if (!e[slot] || G.g.combat) return; addItem(e[slot], 1); e[slot] = null; applyStats(); persist(); render(); }
   const _wb = weaponBonus; weaponBonus = function () { return _wb() + (G?.g ? gsum("dmg") + petB("dmg") : 0); };
@@ -88,7 +124,7 @@
     if (!pets.length && !mts.length) return ""; const g = own();
     const row = (n, x, kind) => { const has = (kind === "pet" ? g.mascotas : g.monturas).includes(n);
       return `<div class="si"><span><b>${x.i} ${esc(n)}</b><small>${kind === "pet" ? esc(x.d) : L(`Viajes a pie ${Math.round((1 - x.m) * 100)}% más rápidos`, `${Math.round((1 - x.m) * 100)}% faster on foot`)}${x.need ? ` · ${L("pide", "needs")} ${Object.entries(x.need).map(([a, b]) => `${b}× ${esc(a)}`).join(", ")}` : ""}</small></span>${has ? `<span class="pill ok">${L("Tuyo", "Owned")}</span>` : `<button type="button" class="btn small" data-xbuy="${kind}|${esc(n)}">${x.p} Soles</button>`}</div>`; };
-    return `<div class="card mini"><b>🐾 ${L("Establo y mascotas", "Stable & pets")}</b><div class="shop">${pets.map(([n, x]) => row(n, x, "pet")).join("")}${mts.map(([n, x]) => row(n, x, "mount")).join("")}</div><p class="note">${L("Cambia de mascota o montura en la pestaña Bolsa.", "Switch pets and mounts in the Bag tab.")}</p></div>`;
+    return `<div class="card mini stableb"><b>🐾 ${L("Establo y mascotas", "Stable & pets")}</b><div class="shop">${pets.map(([n, x]) => row(n, x, "pet")).join("")}${mts.map(([n, x]) => row(n, x, "mount")).join("")}</div><p class="note">${L("Cambia de mascota o montura en la pestaña Bolsa.", "Switch pets and mounts in the Bag tab.")}</p></div>`;
   }
 
   // =====================================================================
@@ -124,11 +160,17 @@
       <p class="note">${L("Cuesta", "Costs")} ${c.soles} Soles + ${c.need} ${L("materiales", "materials")}${c.use.length ? `: ${c.use.map(([m, q]) => `${q}× ${esc(m)}`).join(", ")}` : ""}${c.ok ? "" : L(" · te faltan materiales (caza y explora)", " · not enough materials")}</p>
       <button type="button" class="btn small primary" data-xforge="1" ${c.ok && G.dinero.soles >= c.soles ? "" : "disabled"}>🔨 ${L("Mejorar arma", "Upgrade weapon")}</button>`}</div>`;
   }
+  const SLOT_IC = { cabeza: "🪖", hombros: "🦺", pecho: "🥋", manos: "🧤", pies: "🥾", capa: "🧥", cuello: "📿", anillo: "💍", amuleto: "🔮", escudo: "🛡️" };
+  const SLOT_NM = () => ({ cabeza: L("Cabeza", "Head"), hombros: L("Hombros", "Shoulders"), pecho: L("Pecho", "Chest"), manos: L("Manos", "Hands"), pies: L("Pies", "Feet"), capa: L("Capa", "Cape"), cuello: L("Cuello", "Neck"), anillo: L("Anillo", "Ring"), amuleto: L("Amuleto", "Charm"), escudo: L("Escudo", "Shield") });
   function wearShopBox() {
     const list = Object.entries(WEAR).filter(([, w]) => w.at === hereKey()); if (!list.length) return "";
-    const open = gsel.xwear === hereKey();
-    return `<div class="card mini"><div class="row between"><b>🛡️ ${L("Armaduras y accesorios", "Armor & accessories")}</b><button type="button" class="btn small ${open ? "" : "primary"}" data-xwearshop="1">${open ? L("Cerrar", "Close") : L(`Ver ${list.length}`, `See ${list.length}`)}</button></div>
-      ${open ? `<div class="shop">${list.map(([n, w]) => `<div class="si"><span><b>${w.s === "armadura" ? "🛡️" : "💍"} ${esc(n)}</b><small>${esc(wearDesc(n))}</small></span><button type="button" class="btn small" data-xwearbuy="${esc(n)}">${w.p} Soles</button></div>`).join("")}</div>` : ""}</div>`;
+    const open = gsel.xwear === hereKey(); const e = eq();
+    const cur = (s) => (s === "anillo" ? [e.anillo1, e.anillo2] : [e[s]]).map((n) => WEAR[n]).filter(Boolean);
+    const score = (w) => (w.def || 0) * 3 + (w.dmg || 0) * 3 + (w.pv || 0) / 5 + (w.init || 0) * 2 + (w.mana || 0) / 10 + (w.xp || 0) * 60;
+    return `<div class="card mini wearshop"><div class="row between"><b>🛡️ ${L("Armaduras y accesorios", "Armor & accessories")}</b><button type="button" class="btn small ${open ? "" : "primary"}" data-xwearshop="1">${open ? L("Cerrar", "Close") : L(`Ver ${list.length}`, `See ${list.length}`)}</button></div>
+      ${open ? `<div class="wgrid">${list.map(([n, w]) => { const c = cur(w.s); const better = !c.length || score(w) > Math.min(...c.map(score)); const can = G.dinero.soles >= w.p;
+        return `<div class="witem r-${w.r}"><div class="wic">${SLOT_IC[w.s]}</div><div class="wb"><b>${esc(n)}</b><small>${SLOT_NM()[w.s]}${better ? ` · <span class="up">▲ ${L("mejora", "upgrade")}</span>` : ""}</small><small>${esc(wearDesc(n))}</small></div><button type="button" class="btn small ${can ? "primary" : ""}" data-xwearbuy="${esc(n)}" ${can ? "" : "disabled"}>☀ ${w.p}</button></div>`; }).join("")}</div>
+      <p class="note">${L("Al comprar te lo pones enseguida (lo anterior vuelve a la bolsa). Cámbialo cuando quieras en la pestaña Bolsa.", "Bought gear is equipped right away.")}</p>` : ""}</div>`;
   }
   function wearBuy(n) { const w = WEAR[n]; if (!w) return; if (G.dinero.soles < w.p) return toast(L("No tienes Soles suficientes.", "Not enough Soles.")); G.dinero.soles -= w.p; addItem(n, 1); toast(L(`Compraste ${n}. Póntelo en la Bolsa.`, `Bought ${n}.`)); wear(n); }
 
@@ -309,7 +351,7 @@
   }
   function arenaBox() {
     if (!ARENAS.includes(hereKey())) return ""; const list = others().sort((a, b) => (b.nivel || 0) - (a.nivel || 0)); const p = G.g.pvp || { w: 0, l: 0 };
-    return `<div class="card mini"><b>🤺 ${L("Duelos contra jugadores", "Player duels")}</b> <small class="muted">${L("Tu récord", "Your record")}: ${p.w}–${p.l}</small>
+    return `<div class="card mini arenab"><b>🤺 ${L("Duelos contra jugadores", "Player duels")}</b> <small class="muted">${L("Tu récord", "Your record")}: ${p.w}–${p.l}</small>
       <p class="note">${L("Peleas contra el personaje de tu amigo (sus estadísticas y su arma), aunque no esté conectado. Perder un duelo no te quita Soles.", "Fight a friend's character even if offline.")}</p>
       ${list.length ? `<div class="shop">${list.map((c) => { const e = pvpEnemy(c); const pr = c.g?.pvp || { w: 0, l: 0 };
         return `<div class="si"><span><b>${esc(c.nombre)}</b><small>${L("Nv", "Lv")} ${c.nivel} · ${esc(c.g?.arma?.n || "—")} · PV ${e.pv} · ${L("récord", "record")} ${pr.w}–${pr.l}</small></span><button type="button" class="btn small primary" data-xpvp="${c.id}">⚔️ ${L("Retar (1 Energía)", "Challenge")}</button></div>`; }).join("")}</div>` : `<p class="muted">${L("Todavía no hay otros jugadores.", "No other players yet.")}</p>`}</div>`;
@@ -361,7 +403,7 @@
       if (r.kind === "world") lines.push(wbReward(r));
       if (lines.length) { toast(lines.join(" · ")); G.g.lastResult = { title: L("El grupo ganó", "The group won"), lines }; }
     },
-    dq, WEAR, PETS, MOUNTS,
+    dq, WEAR, PETS, MOUNTS, SLOTS, SLOT_IC, SLOT_NM, eq: () => eq(), wearDesc, gsum: (k) => gsum(k), heavy: () => heavy(),
   };
 
   // =====================================================================
@@ -503,8 +545,8 @@
     const out = _bv(); const e = eq(); const g = own();
     const wearInv = Object.keys(G.g.inv).filter((n) => WEAR[n]);
     const slot = (s, ic, lb) => `<div class="si ${e[s] ? "eq" : ""}"><span><b>${ic} ${lb}: ${e[s] ? esc(e[s]) : L("nada", "none")}</b>${e[s] ? `<small>${esc(wearDesc(e[s]))}</small>` : ""}</span>${e[s] ? `<button type="button" class="btn small ghost" data-xunwear="${s}">${L("Quitar", "Remove")}</button>` : ""}</div>`;
-    const box = `<div class="card mini gearb"><b>🛡️ ${L("Equipo", "Gear")}</b>${slot("armadura", "🛡️", L("Armadura", "Armor"))}${slot("accesorio", "💍", L("Accesorio", "Accessory"))}
-      ${wearInv.map((n) => `<div class="si"><span><b>${WEAR[n].s === "armadura" ? "🛡️" : "💍"} ${esc(n)}</b><small>${esc(wearDesc(n))} · ${L("en la bolsa", "in bag")} (${G.g.inv[n]})</small></span><button type="button" class="btn small" data-xwear="${esc(n)}">${L("Ponerse", "Wear")}</button></div>`).join("")}
+    const box = `<div class="card mini gearb"><b>🛡️ ${L("Equipo", "Gear")}</b>${SLOTS.map((sl) => slot(sl, SLOT_IC[slotType(sl)], SLOT_NM()[slotType(sl)])).join("")}
+      ${wearInv.map((n) => `<div class="si"><span><b>${SLOT_IC[WEAR[n].s]} ${esc(n)}</b><small>${esc(wearDesc(n))} · ${L("en la bolsa", "in bag")} (${G.g.inv[n]})</small></span><button type="button" class="btn small" data-xwear="${esc(n)}">${L("Ponerse", "Wear")}</button></div>`).join("")}
       <div class="row pm"><span>🐾 ${L("Mascota", "Pet")}:</span>${g.mascotas.length ? [null, ...g.mascotas].map((n) => `<button type="button" class="chip ${G.g.mascota === n ? "on" : ""}" data-xpet="${n ? esc(n) : ""}">${n ? `${PETS[n].i} ${esc(n)}` : L("ninguna", "none")}</button>`).join("") : `<small class="muted">${L("Adopta una en Pueblo del Alba, Copaalta, Trigalia, la Plaza Real, el Muelle o Forjaroja.", "Adopt one in town.")}</small>`}</div>
       ${G.g.mascota ? `<small class="muted">${PETS[G.g.mascota].i} ${esc(PETS[G.g.mascota].d)}</small>` : ""}
       <div class="row pm"><span>🐎 ${L("Montura", "Mount")}:</span>${g.monturas.length ? [null, ...g.monturas].map((n) => `<button type="button" class="chip ${G.g.montura === n ? "on" : ""}" data-xmount="${n ? esc(n) : ""}">${n ? `${MOUNTS[n].i} ${esc(n)}` : L("a pie", "on foot")}</button>`).join("") : `<small class="muted">${L("Compra una en los establos (Pueblo del Alba, Trigalia, Forjaroja o los Nidos del Grifo).", "Buy one at a stable.")}</small>`}</div></div>`;
@@ -514,7 +556,7 @@
   hud = function () {
     const out = _hud(); if (!G?.g) return out; const b = [];
     if (G.g.mascota && PETS[G.g.mascota]) b.push(`${PETS[G.g.mascota].i} ${esc(G.g.mascota)}`); if (G.g.montura && MOUNTS[G.g.montura]) b.push(`${MOUNTS[G.g.montura].i} ${esc(G.g.montura)}`);
-    if (eq().armadura) b.push(`🛡️ ${esc(eq().armadura)}`);
+    if (eq().pecho) b.push(`🥋 ${esc(eq().pecho)}`);
     return b.length ? out.replace('<div class="where">', `<div class="where"><small class="xbadges">${b.join(" · ")}</small><br>`) : out;
   };
   let lastPvpSeen = null;
@@ -532,7 +574,7 @@
     if (view.name !== "game" || !G) return;
     const t = ev.target.closest("button"); if (!t) return; const d = t.dataset; const stop = () => ev.stopPropagation();
     if (d.xforge) { stop(); return forge(); }
-    if (d.xwear) { stop(); return wear(d.xwear); }
+    if (d.xwear) { stop(); const [n, sl] = d.xwear.split("|"); return wear(n, sl); }
     if (d.xunwear) { stop(); return unwear(d.xunwear); }
     if (d.xwearshop) { stop(); gsel.xwear = gsel.xwear === hereKey() ? null : hereKey(); return render(); }
     if (d.xwearbuy) { stop(); return wearBuy(d.xwearbuy); }
@@ -569,6 +611,11 @@
 .daily .dq{display:flex;flex-direction:column;gap:6px;margin-top:6px}.dqi{display:flex;justify-content:space-between;align-items:center;gap:10px}.dqi small{color:var(--ink-2)}.dqi.ok{opacity:.55}.dqi .qt-bar{width:120px}
 .dun.on{border-color:#9b5cff66}.dfl{display:flex;gap:4px;margin:6px 0}.dfl i{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;background:#1b2635;color:var(--ink-2)}.dfl i.ok{background:#8be0a833;color:#8be0a8}.dfl i.now{background:#9b5cff55;color:#fff;box-shadow:0 0 8px #9b5cff}
 .wboss{border-color:#e0584a77;background:linear-gradient(90deg,#e0584a14,transparent 70%),var(--panel-2)}.wboss small{display:block;color:var(--ink-2);margin-top:3px}.wbbar{max-width:none;height:8px}.wbbar i{background:linear-gradient(90deg,#e0584a,#ffb36b)}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin-top:8px}
+.witem{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-left:3px solid var(--rc,#8a96a8);border-radius:8px;padding:8px 10px;background:var(--panel-2)}
+.witem .wic{font-size:24px;width:40px;height:40px;display:grid;place-items:center;border-radius:8px;background:#0b131c;box-shadow:inset 0 0 0 1px var(--rc,#8a96a8)}
+.witem .wb{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0}.witem small{color:var(--ink-2);font-size:12.5px}.witem .up{color:#8be0a8}
+.r-c{--rc:#8a96a8}.r-r{--rc:#4fb3ff}.r-e{--rc:#b98cf0}.r-l{--rc:#ff9a3d}
 .gearb .si.eq{border-left:3px solid #8be0a8;padding-left:8px}.gearb .pm{gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
 .xbadges{color:#d9c9a0}
 `;
