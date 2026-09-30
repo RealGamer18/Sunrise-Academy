@@ -483,7 +483,7 @@
 .sov-shade{position:absolute;inset:0;background:linear-gradient(180deg,#0b131c55 0%,#0b131c11 35%,#0b131ccc 70%,#0b131cf5 100%)}
 .sov-top{position:absolute;top:12px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;z-index:2}
 .sov-skip{background:#0b131ccc;border:1px solid var(--line);color:var(--ink-2);border-radius:999px;padding:6px 14px;font-family:var(--display);cursor:pointer}
-.sov-cast{position:relative;z-index:2;display:flex;justify-content:flex-end;padding:0 6%;margin-bottom:-26px;min-height:40px}
+.sov-cast{position:relative;z-index:2;display:flex;justify-content:flex-end;width:min(900px,calc(100% - 32px));margin:0 auto 24px;padding:0 10px;min-height:20px}
 .sov-face{animation:sovFace .4s cubic-bezier(.2,1.3,.4,1)}.sov-face.me{margin-right:auto}
 @keyframes sovFace{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:none}}
 .sov-box{position:relative;z-index:1;margin:0 auto 24px;width:min(900px,calc(100% - 32px));background:#0b131cee;border:1px solid color-mix(in srgb,var(--c) 60%,transparent);border-radius:10px;padding:34px 22px 18px;box-shadow:0 10px 40px #000c,0 0 30px color-mix(in srgb,var(--c) 20%,transparent)}
