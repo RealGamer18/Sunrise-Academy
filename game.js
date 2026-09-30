@@ -31,6 +31,8 @@ function setActive(id) { try { localStorage.setItem("sa-active", id); } catch (e
 function startGame(id) {
   const ch = Store.all.find((c) => c.id === id && c.owner === Store.uid); if (!ch) return;
   G = ensureGame(JSON.parse(JSON.stringify(ch))); setActive(id);
+  // Curva de XP nueva (2026-09-29): convierte la XP guardada al mismo porcentaje del nivel actual.
+  if (!G.g.xpv) { G.xp = Math.round((G.xp || 0) * xpToNext(G.nivel) / xpToNextOld(G.nivel)); G.g.xpv = 2; persist(); }
   if ((G.hpv || 1) < 2) { G.hpv = 2; G.pvMax += 30 + 2 * (G.atributos.defensa || 0) + 2 * Math.max(0, G.nivel - 1); G.pv = G.pvMax; persist(); } view = { name: "game" }; gtab = G.g.combat ? "lugar" : gtab; render();
 }
 let saveTimer = null;
@@ -77,9 +79,9 @@ function raiseAttr(k) {
   if (k === "defensa") { const inc = Math.max(1, Math.floor(G.pvMax * 0.025)); G.pvMax += inc; G.pv += inc; }
   if (k === "inteligencia" && G.manaMax > 0) { const inc = Math.max(1, Math.floor(G.manaMax * 0.05)); G.manaMax += inc; G.mana += inc; }
 }
-function applyFx(fx = {}) {
+function applyFx(fx = {}, story) {
   const out = [];
-  if (fx.xp) { gainXP(fx.xp); out.push(`+${fx.xp} XP`); }
+  if (fx.xp) { const x = story ? storyXP(fx.xp, G.nivel) : fx.xp; gainXP(x); out.push(`+${x} XP`); }
   if (fx.rayos) { addRayos(fx.rayos); for (const [k, v] of Object.entries(fx.rayos)) out.push(`${v > 0 ? "+" : ""}${v} Rayos de ${k}`); }
   if (fx.soles) { G.dinero.soles = Math.max(0, G.dinero.soles + fx.soles); out.push(`${fx.soles > 0 ? "+" : ""}${fx.soles} Soles`); }
   if (fx.pv) { G.pv = clamp(G.pv + fx.pv, 1, G.pvMax); out.push(`${fx.pv > 0 ? "+" : ""}${fx.pv} PV`); }
@@ -243,7 +245,7 @@ function enemyTurn() {
   if (ps.st.Asustado && --ps.st.Asustado <= 0) delete ps.st.Asustado;
 }
 function xpFor(e) {
-  let xp = (e.boss ? 100 : 10) * e.lvl;
+  let xp = (e.boss ? 60 : 10) * e.lvl; // jefe ≈ 6 monstruos (ajustado con la nueva curva de XP)
   if (e.lvl <= G.nivel - 5) xp *= 0.1; else if (e.lvl >= G.nivel + 5) xp *= 1.5;
   return Math.round(xp);
 }
@@ -414,7 +416,7 @@ function chapter() { return STORY.find((s) => s.cap === worldCap()); }
 function storyChoice(i) {
   const ch = chapter(); if (!ch || G.g.story[ch.cap]) return;
   const c = ch.choices[i]; const sm = attr(c.stat) + ctxBonus(c.stat, "story"); const adv = c.adv && G.g.flags[c.adv]; const r = rollX(adv ? 1 : 0); const tot = rollTotal(r, sm + (RISK_MOD[c.risk] || 0)); const tier = tierOf(tot);
-  const o = c.out[tier]; const fx = applyFx(o.fx);
+  const o = c.out[tier]; const fx = applyFx(o.fx, true);
   G.g.story[ch.cap] = { l: c.l, tier, text: o.t, roll: `${r.ds.join("+")}${r.plus ? " +1" : ""} ${sgn(sm)} = ${tot}${adv ? " (con ventaja)" : ""}`, fx };
   log(`Capítulo ${ch.cap}: ${c.l} → ${TIER[tier]}. ${o.t}`);
   advance(3); persist(); render();

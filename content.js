@@ -88,7 +88,11 @@ function peldanoFor(total) { let p = PELDANOS[0]; for (const x of PELDANOS) if (
 const RIVALES = [["Darius Valcor", "Humano", 120, 9], ["Seraphina Lux", "Celestial", 100, 8], ["Thorne Colmillo", "Bestial", 60, 7], ["Pip Brizna", "Feérica", 50, 6], ["Garrok Piedraluna", "Semigigante", 40, 5], ["El Enmascarado", "???", 30, 8]];
 
 // ===== Progresión =====
-const xpToNext = (n) => Math.round(100 * Math.pow(n, 1.5));
+// XP para subir de nivel (reducido 2026-09-29): unas 6-9 victorias contra monstruos de tu nivel por nivel.
+// Antes era Math.round(100 * Math.pow(n, 1.5)) (≈1.850 XP en nivel 7). La XP de la historia se escala para mantener su ritmo.
+const xpToNext = (n) => Math.round((60 * n + 5 * Math.pow(n, 1.4)) / 10) * 10;
+const xpToNextOld = (n) => Math.round(100 * Math.pow(n, 1.5));
+const storyXP = (xp, lvl) => Math.max(1, Math.round((xp * xpToNext(lvl)) / xpToNextOld(lvl) / 5) * 5);
 
 // ===== Historia: Arco 1, El Primer Año =====
 // choices: stat, risk (Bajo/Moderado/Alto), out: hit/mix/miss -> {t, fx}
