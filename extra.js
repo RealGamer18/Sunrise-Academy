@@ -361,7 +361,7 @@
       if (r.kind === "world") lines.push(wbReward(r));
       if (lines.length) { toast(lines.join(" · ")); G.g.lastResult = { title: L("El grupo ganó", "The group won"), lines }; }
     },
-    dq,
+    dq, WEAR, PETS, MOUNTS,
   };
 
   // =====================================================================
