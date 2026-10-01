@@ -1,0 +1,9 @@
+// Copia este archivo como config.js y completa los valores de tu proyecto Supabase.
+// La publishable key está diseñada para usarse en el navegador; la service_role key NO debe aparecer aquí.
+window.SA_CONFIG = {
+  SUPABASE_URL: "https://TU-PROYECTO.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_TU_CLAVE",
+  ROOM_ID: "solvaria",
+  HOST_USER_ID: "",
+  AI_ENDPOINT: ""
+};

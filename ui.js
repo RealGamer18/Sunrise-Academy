@@ -100,7 +100,7 @@
   function detail() {
     const s = gsel.uiSel; const W = X().WEAR || {}; const e = X().eq?.() || {};
     if (!s) return `<div class="bdet hint"><b>👆 ${L("Toca una ranura o un objeto", "Tap a slot or an item")}</b><small>${L("Verás qué hace, qué mejora (▲) y podrás equiparlo o usarlo.", "See what it does and equip or use it.")}</small></div>`;
-    const card = (n, head, acts, extra = "") => `<div class="bdet"><div class="bdh">${head}</div>${acts ? `<div class="row">${acts}</div>` : ""}${extra}</div>`;
+    const card = (n, head, acts, extra = "") => `<div class="bdet open"><button type="button" class="bdx" data-uiclose="1" aria-label="${L("Cerrar", "Close")}">✕</button><div class="bdh">${head}</div>${acts ? `<div class="row">${acts}</div>` : ""}${extra}</div>`;
     if (s.slot === "arma") {
       const a = G.g.arma; const list = (G.g.armas || []).map((n, i) => ({ n, i })).sort((x, y) => (WEAPONS[y.n] || 0) - (WEAPONS[x.n] || 0));
       return card(a.n, `<span class="bdi">🗡️</span><div><b>${esc(a.n)}</b><small>${L("Arma equipada", "Equipped weapon")} · ${L("Poder", "Power")} ${a.poder}${WEAPON_AFF[a.n] ? " · ✦ " + WEAPON_AFF[a.n] : ""}${(WEAPON_TRAITS[a.n] || []).length ? " · " + WEAPON_TRAITS[a.n].join(", ") : ""}</small></div>`, "",
@@ -137,13 +137,14 @@
     const out = _bv(); if (!G?.g) return out;
     const qi = out.indexOf('<h3 class="sub">Misiones aceptadas'); const quests = qi >= 0 ? out.slice(qi) : "";
     return `<div class="inv"><div class="invhead"><h2>🎒 ${esc(G.nombre)} — ${L("Nivel", "Level")} ${G.nivel}</h2></div>
-      <div class="invgrid">${doll()}<div class="invright">${bagGrid()}${detail()}</div></div></div>${quests}`;
+      <div class="invgrid">${doll()}<div class="invright">${detail()}${bagGrid()}</div></div></div>${quests}`;
   };
   // equipar con animación
   let pre = null;
   document.addEventListener("pointerdown", () => { if (G?.g) pre = { eq: JSON.stringify(X().eq?.() || {}), arma: G.g.arma?.n, st: heroStats(), pv: G.pvMax }; }, true);
   document.addEventListener("click", (ev) => {
     if (view.name !== "game" || !G) return; const t = ev.target.closest("button"); if (!t) return; const d = t.dataset;
+    if (d.uiclose) { ev.stopPropagation(); gsel.uiSel = null; return render(); }
     if (d.uislot) { ev.stopPropagation(); gsel.uiSel = gsel.uiSel?.slot === d.uislot ? null : { slot: d.uislot }; sfx("click"); return render(); }
     if (d.uiitem) { ev.stopPropagation(); const idx = d.uiidx != null ? +d.uiidx : null; gsel.uiSel = gsel.uiSel?.item === d.uiitem && gsel.uiSel?.idx == idx ? null : { item: d.uiitem, idx }; sfx("click"); return render(); }
     if (d.uicat) { ev.stopPropagation(); gsel.uiCat = d.uicat; return render(); }
@@ -211,10 +212,16 @@
     blocks.reverse().forEach((b) => anchor.after(b));
     if (acts && !acts.previousElementSibling?.classList?.contains("lsech")) { const h = document.createElement("h3"); h.className = "lsech"; h.innerHTML = `<span>🎯</span> ${L("Qué puedes hacer aquí", "What you can do here")}`; acts.before(h); }
   }
+  let lastSelKey = null;
+  function showDetail() {
+    const k = JSON.stringify(gsel.uiSel || null); if (k === lastSelKey) return; lastSelKey = k;
+    const el = document.querySelector(".bdet.open"); if (!el || getComputedStyle(el).position === "fixed") return;
+    const r = el.getBoundingClientRect(); if (r.top < 60 || r.bottom > innerHeight) el.scrollIntoView({ behavior: RM() ? "auto" : "smooth", block: "center" });
+  }
   const _render = render;
   render = function () {
     const r = _render.apply(this, arguments);
-    try { if (G && view.name === "game") organizeLugar(); } catch (e) { console.warn("ui:", e); }
+    try { if (G && view.name === "game") organizeLugar(); if (G && view.name === "game" && gtab === "bolsa") showDetail(); } catch (e) { console.warn("ui:", e); }
     return r;
   };
 
@@ -331,6 +338,11 @@ h3.sub::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#d9a
 .bcell.c-armas{border-color:#ffd98a66}
 @keyframes cellIn{from{opacity:0;transform:scale(.8)}}
 .bdet{padding:12px;border-radius:12px;border:1px solid #d9a44144;background:linear-gradient(180deg,#1b2b3f,#131f2f);display:flex;flex-direction:column;gap:8px;animation:tsIn .3s ease}
+.bdet{position:relative}.bdx{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:#0b131c;color:var(--ink-2);cursor:pointer;font-size:13px;line-height:1}
+.bdx:hover{border-color:#d9a441;color:#fff}.bdet.open .bdh{padding-right:34px}
+@media (max-width:900px){.bdet.open{position:fixed;left:10px;right:10px;bottom:10px;z-index:66;max-height:62vh;overflow:auto;box-shadow:0 -10px 40px #000c,0 0 0 1px #d9a44166;animation:sheetUp .28s cubic-bezier(.2,1,.3,1)}
+  .bdet.hint{display:none}}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}}
 .bdet.hint{align-items:center;text-align:center;color:var(--ink-2);border-style:dashed}
 .bdh{display:flex;gap:10px;align-items:flex-start}.bdh > div{display:flex;flex-direction:column;gap:2px;min-width:0}.bdh b{font-family:var(--display);color:#ffe9b8;font-size:15.5px}.bdh small{color:var(--ink-2);font-size:12.5px}
 .bdi{font-size:30px;width:52px;height:52px;flex:none;display:grid;place-items:center;border-radius:10px;background:#0b131c;border:1px solid var(--rc,#3a5270);box-shadow:inset 0 0 12px color-mix(in srgb,var(--rc,#3a5270) 40%,transparent)}
