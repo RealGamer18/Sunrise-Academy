@@ -451,12 +451,14 @@
   // ---------- estilos ----------
   const css = `
 .qtrack{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;border:1px solid #d9a44166;border-radius:8px;background:linear-gradient(90deg,#d9a44118,#0b131c00 70%),var(--panel-2);box-shadow:0 0 0 1px #0004 inset}
-.qt-l{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.qt-l{display:flex;flex-direction:column;gap:3px;min-width:min(220px,100%);flex:1 1 220px}
 .qt-l small{color:var(--ink-2);font-size:12.5px;letter-spacing:.03em}
 .qt-l b{font-family:var(--display);font-size:16px;color:#fff3d6;letter-spacing:.02em}
 .qt-behind{color:#8be0a8}
 .qt-bar{display:block;height:4px;border-radius:3px;background:#1b2635;overflow:hidden;max-width:360px}.qt-bar i{display:block;height:100%;background:linear-gradient(90deg,#d9a441,#ffe9a0);transition:width .6s}
 .qt-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.qt-r .btn{max-width:100%;white-space:normal}
+@media (max-width:560px){.qtrack{padding:10px 12px}.qt-l,.qt-r{flex:1 1 100%}.qt-r .btn{flex:1 1 auto}.qt-l b{font-size:15px}}
 .qsteps{list-style:none;padding:0;margin:14px 0;display:flex;flex-direction:column;gap:6px}
 .qs{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:6px;border:1px solid transparent}
 .qs .qs-i{width:20px;text-align:center;flex:none;color:var(--muted)}

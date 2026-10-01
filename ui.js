@@ -248,8 +248,9 @@ h3.sub::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#d9a
 .pill{border-radius:999px}
 /* ---------- HUD ---------- */
 .hud{border-radius:14px;border-color:#d9a44133;background:linear-gradient(135deg,#1a2a3e,#111c2a 60%,#1a1a2e);box-shadow:0 10px 30px #0008,inset 0 1px 0 #ffffff0d;padding:14px 18px}
-.hud .who{padding-left:78px;min-height:66px}
-.hud .hpor{position:absolute;left:0;top:0;width:64px;height:64px}
+.hud .who{display:grid;grid-template-columns:64px minmax(0,1fr);column-gap:14px;align-content:center;padding-left:0!important;min-height:66px;min-width:0}
+.hud .who>*{grid-column:2;min-width:0;overflow-wrap:anywhere}
+.hud .hpor{position:relative!important;grid-column:1!important;grid-row:1/span 4;align-self:start;width:64px;height:64px;left:auto;top:auto}
 .hud .hpor .hud-img{position:static;width:64px;height:64px;border-radius:50%;box-shadow:0 0 0 2px #d9a441,0 0 18px #d9a44155}
 .lvlb{position:absolute;right:-6px;bottom:-4px;min-width:24px;height:24px;padding:0 5px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(180deg,#ffd98a,#b8862b);color:#1a1206;font-family:var(--display);font-weight:700;font-size:12.5px;box-shadow:0 2px 6px #000a}
 .hud .who b{font-size:20px}
@@ -271,6 +272,8 @@ h3.sub::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#d9a
 .gtabs button.on{background:linear-gradient(180deg,#d9a44133,#d9a44111);border-color:#d9a44188;color:#ffe9b8;box-shadow:0 0 14px #d9a44133}
 .gtabs button.on::after{content:"";position:absolute;left:18%;right:18%;bottom:-1px;height:2px;border-radius:2px;background:#ffd98a;box-shadow:0 0 8px #ffd98a}
 @media (max-width:640px){.gtabs button{padding:7px 9px;font-size:12px}}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@media (max-width:560px){.hud{padding:12px}.hud .who{grid-template-columns:56px minmax(0,1fr);column-gap:12px;min-height:58px}.hud .hpor,.hud .hpor .hud-img{width:56px!important;height:56px!important}.hud .who b{font-size:18px}.meters .m{min-width:0;flex:1 1 130px}}
 /* ---------- lugar ---------- */
 .lsech{display:flex;align-items:center;gap:8px;margin:20px 0 8px;color:var(--gold);font-size:13px}
 .lsech span{font-size:16px}.lsech::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#d9a44144,transparent)}
