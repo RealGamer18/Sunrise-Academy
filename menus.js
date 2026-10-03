@@ -47,12 +47,14 @@
     // aceptadas del tablón
     for (const q of G.g.quests || []) {
       if (q.claimed) continue;
-      let pr = 0, k = q.place || q.dest || null;
-      if (q.type === "caza") pr = typeof questProgress === "function" ? questProgress(q) : 0;
-      else if (q.type === "recolectar") { pr = Math.min(q.need, G.g.inv?.[q.item] || 0); k = k || keyByPinName(q.where); }
-      else pr = q.done ? q.need : 0;
-      const ic = { caza: "⚔️", recolectar: "🌿", escolta: q.wi || "🛡️", buscado: "🎯" }[q.type] || "📌";
-      out.push({ kind: "quest", ic, t: q.t, sub: { caza: Lx("Caza", "Hunt"), recolectar: Lx("Recolectar", "Gather"), escolta: Lx("Escolta", "Escort"), buscado: Lx("Se busca", "Wanted") }[q.type] || Lx("Misión", "Quest"), key: k, pr, need: q.need, ready: pr >= q.need });
+      const ty = q.type || "caza";
+      let k = (ty === "entrega" || ty === "escolta" ? q.dest : q.place) || q.place || q.dest || null;
+      if (ty === "recolectar" && !k) k = keyByPinName(q.where);
+      let pr = 0;
+      try { pr = typeof questProgress === "function" ? questProgress(q) : 0; } catch (e) { pr = 0; }
+      pr = Math.max(0, Math.min(q.need || 1, +pr || 0));
+      const ic = { caza: "⚔️", recolectar: "🌿", escolta: q.wi || "🛡️", buscado: "🎯", entrega: "📦" }[ty] || "📌";
+      out.push({ kind: "quest", ic, t: q.t, sub: { caza: Lx("Caza", "Hunt"), recolectar: Lx("Recolectar", "Gather"), escolta: Lx("Escolta", "Escort"), buscado: Lx("Se busca", "Wanted"), entrega: Lx("Entrega", "Delivery") }[ty] || Lx("Misión", "Quest"), key: k, pr, need: q.need, ready: pr >= q.need });
     }
     return out.map((m) => ({ ...m, here: m.key && m.key === here }));
   }
@@ -85,7 +87,7 @@
     }
     panel.insertAdjacentHTML("afterbegin", missionPanel());
     const svg = panel.querySelector(".minimap svg"); if (!svg) return;
-    const ms = missions(); const keys = new Set(ms.filter((m) => m.kind === "quest" && m.key).map((m) => m.key));
+    const ms = missions(); const keys = new Set(ms.filter((m) => m.kind === "quest" && m.key && !m.ready).map((m) => m.key));
     svg.querySelectorAll("g.gpin").forEach((g) => {
       const k = g.dataset.pin; const c = g.querySelector("circle:not(.sa-ring)"); if (!c) return;
       const cx = +c.getAttribute("cx"), cy = +c.getAttribute("cy");
