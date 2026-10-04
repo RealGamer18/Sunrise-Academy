@@ -77,12 +77,12 @@
     const s = [];
     try {
       const g = G.g;
-      if (g.food && g.food.left > 0) s.push(["🍲", escx(g.food.n), Lx(`${g.food.left} combates`, `${g.food.left} fights`), "good"]);
-      if (g.oil && g.oil.left > 0) s.push([g.oil.ic || "🛢️", escx(g.oil.n), Lx(`${g.oil.left} combates`, `${g.oil.left} fights`), "good"]);
-      if (g.mascota) s.push(["🐾", escx(g.mascota), Lx("Mascota contigo", "Pet with you"), "good"]);
-      if (g.montura) s.push(["🐎", escx(g.montura), Lx("Montura", "Mount"), "good"]);
+      if (g.food && g.food.left > 0) s.push([(window.SAI && window.SAI.obj(g.food.n, "🍲")) || "🍲", escx(g.food.n), Lx(`${g.food.left} combates`, `${g.food.left} fights`), "good"]);
+      if (g.oil && g.oil.left > 0) s.push([(window.SAI && window.SAI.obj(g.oil.n, g.oil.ic || "🛢️")) || g.oil.ic || "🛢️", escx(g.oil.n), Lx(`${g.oil.left} combates`, `${g.oil.left} fights`), "good"]);
+      if (g.mascota) s.push([(window.SAI && window.SAI.pet(g.mascota)) || "🐾", escx(g.mascota), Lx("Mascota contigo", "Pet with you"), "good"]);
+      if (g.montura) s.push([(window.SAI && window.SAI.pet(g.montura)) || "🐎", escx(g.montura), Lx("Montura", "Mount"), "good"]);
       const esc2 = g.quests?.find((q) => q.type === "escolta" && !q.done); if (esc2) s.push([esc2.wi || "🧑", escx(esc2.who), Lx("Escoltando", "Escorting"), ""]);
-      if (typeof weatherFor === "function" && typeof CLIMAS !== "undefined") { const w = weatherFor(g.loc.r, g.day); s.push([CLIMAS[w]?.icon || "☁", escx(w), Lx("Clima", "Weather"), ""]); }
+      if (typeof weatherFor === "function" && typeof CLIMAS !== "undefined") { const w = weatherFor(g.loc.r, g.day); s.push([(window.SAI && window.SAI.wx(w, CLIMAS[w]?.icon)) || CLIMAS[w]?.icon || "☁", escx(w), Lx("Clima", "Weather"), ""]); }
       if (G.pv < G.pvMax * 0.3) s.push(["🩸", Lx("Herido", "Wounded"), Lx("Cúrate o descansa", "Heal or rest"), "bad"]);
       if (G.energia <= 0) s.push(["😴", Lx("Agotado", "Exhausted"), Lx("Descansa en una posada", "Rest at an inn"), "bad"]);
       if (G.estres >= 7) s.push(["😵", Lx("Estresado", "Stressed"), `${G.estres}/10`, "bad"]);
@@ -279,7 +279,7 @@ body.sa-theme{--steel1:#151d28;--steel2:#0c1219;--rune:#d9a441;--ink-dark:#2b1d0
 .sa-status h3{margin:4px 0 8px}
 .sa-stl{display:flex;flex-wrap:wrap;gap:6px}
 .sa-st{display:grid;grid-template-columns:auto 1fr;column-gap:8px;align-items:center;padding:6px 10px 6px 8px;border:1px solid #d9a44133;background:linear-gradient(90deg,#d9a44112,#0b131c);min-width:140px;flex:1 1 140px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
-.sa-st em{grid-row:1/span 2;font-style:normal;font-size:20px}.sa-st b{font-size:13.5px}.sa-st small{color:var(--ink-2);font-size:11.5px}
+.sa-st em{grid-row:1/span 2;font-style:normal;font-size:20px}.sa-st em .sai{width:28px;height:28px;vertical-align:middle}.sa-st b{font-size:13.5px}.sa-st small{color:var(--ink-2);font-size:11.5px}
 .sa-st.good{border-color:#79c29a55;background:linear-gradient(90deg,#79c29a18,#0b131c)}
 .sa-st.bad{border-color:#e0735c66;background:linear-gradient(90deg,#e0735c22,#0b131c)}
 @media (max-width:860px){.sa-dash{grid-template-columns:1fr}}

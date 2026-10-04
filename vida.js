@@ -162,11 +162,14 @@
   function eventCard() {
     const s = season(); if (!s) return "";
     const have = G.g.inv[s.cur] || 0;
+    const SI = window.SAI; const curI = (SI && SI.obj(s.cur, s.curIc)) || s.curIc;
+    const hdI = SI ? SI.img(({ halloween: "pet/gato-de-calabaza", invierno: "obj/copo-de-nieve", alba: "obj/petalo-del-alba" })[s.k] || "obj/" + "x", s.ic) : s.ic;
+    const itI = (it) => (SI && (it.id === "pet" ? SI.pet(it.n) : SI.obj(it.n, it.ic))) || it.ic;
     const shop = isHub() ? `<div class="sa-evshop">${EV_SHOP(s).map((it) => {
       const owned = (it.id === "pet" && (G.g.mascotas || []).includes(it.n)) || (it.id === "weapon" && (G.g.arma?.n === it.n || (G.g.armas || []).includes(it.n)));
-      return `<div class="sa-evit"><em>${it.ic}</em><div><b>${escx(it.n)}</b>${it.d ? `<small>${it.d()}</small>` : ""}</div><button type="button" class="btn small ${owned ? "" : "primary"}" data-saev="${it.id}" ${owned || have < it.p ? "disabled" : ""}>${owned ? Lx("Ya lo tienes", "Owned") : `${s.curIc} ${it.p}`}</button></div>`;
+      return `<div class="sa-evit"><em>${itI(it)}</em><div><b>${escx(it.n)}</b>${it.d ? `<small>${it.d()}</small>` : ""}</div><button type="button" class="btn small ${owned ? "" : "primary"}" data-saev="${it.id}" ${owned || have < it.p ? "disabled" : ""}>${owned ? Lx("Ya lo tienes", "Owned") : `${curI} ${it.p}`}</button></div>`;
     }).join("")}</div>` : `<p class="note">${Lx("El tenderete del evento está en los pueblos y ciudades principales.", "The event stall is in the main towns.")}</p>`;
-    return `<div class="sa-evcard ev-${s.k}"><div class="sa-evh"><span class="sa-evic">${s.ic}</span><div><b>${escx(s.n)}</b><small>${Lx(`Hasta el ${s.until} · monstruos de evento en todas partes · sueltan`, `Until ${s.until} · event monsters drop`)} ${s.curIc} ${escx(s.cur)}</small></div><span class="pill">${s.curIc} ${have}</span></div>${shop}</div>`;
+    return `<div class="sa-evcard ev-${s.k}"><div class="sa-evh"><span class="sa-evic">${hdI}</span><div><b>${escx(s.n)}</b><small>${Lx(`Hasta el ${s.until} · monstruos de evento en todas partes · sueltan`, `Until ${s.until} · event monsters drop`)} ${curI} ${escx(s.cur)}</small></div><span class="pill">${curI} ${have}</span></div>${shop}</div>`;
   }
   function buyEv(id) {
     const s = season(); if (!s || !isHub()) return; const it = EV_SHOP(s).find((x) => x.id === id); if (!it) return;
@@ -300,7 +303,8 @@
     if (decoFor === k) return; decoFor = k;
     document.getElementById("sa-deco")?.remove(); if (!s) return;
     const d = document.createElement("div"); d.id = "sa-deco"; d.setAttribute("aria-hidden", "true");
-    d.innerHTML = s.deco.map((ic, i) => `<span style="left:${8 + i * 19}%;animation-delay:${-i * 3.1}s;animation-duration:${16 + i * 3}s">${ic}</span>`).join("");
+    const DI = { "🦇": "mon/murcielago-vampiro", "🎃": "mon/calabaza-maldita", "👻": "mon/fantasma-travieso", "❄️": "obj/copo-de-nieve", "🌸": "obj/petalo-del-alba", "☀️": "stat/soles" };
+    d.innerHTML = s.deco.map((ic, i) => `<span style="left:${8 + i * 19}%;animation-delay:${-i * 3.1}s;animation-duration:${16 + i * 3}s">${window.SAI && DI[ic] ? window.SAI.img(DI[ic], ic) : ic}</span>`).join("");
     document.body.appendChild(d);
   }
   function post() {
@@ -369,9 +373,9 @@ body.sa-night .scene{filter:brightness(.6) saturate(.8) hue-rotate(-15deg)}
 .sa-evh>div{flex:1;display:flex;flex-direction:column}.sa-evh b{font-family:var(--display);font-size:17px;color:#ffcf9a}.sa-evh small{color:#e8c9b0}
 .sa-evshop{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin-top:10px}
 .sa-evit{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:3px;background:#00000044;border:1px solid #ffffff12}
-.sa-evit em{font-style:normal;font-size:22px}.sa-evit>div{flex:1;min-width:0;display:flex;flex-direction:column}.sa-evit b{font-size:13.5px}.sa-evit small{color:var(--ink-2);font-size:11.5px}
+.sa-evit em{font-style:normal;font-size:22px}.sa-evit em .sai{width:40px;height:40px;vertical-align:middle}.sa-evic .sai{width:56px;height:56px;vertical-align:middle}.sa-evcard .btn .sai,.sa-evh .pill .sai,.sa-evh small .sai{width:18px;height:18px;vertical-align:-4px}.sa-evit>div{flex:1;min-width:0;display:flex;flex-direction:column}.sa-evit b{font-size:13.5px}.sa-evit small{color:var(--ink-2);font-size:11.5px}
 #sa-deco{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
-#sa-deco span{position:absolute;top:-40px;font-size:22px;opacity:.35;animation:saFall linear infinite}
+#sa-deco span{position:absolute;top:-40px;font-size:22px;opacity:.35;animation:saFall linear infinite}#sa-deco .sai{width:34px;height:34px}
 body.sa-ev-halloween #sa-deco span{animation-name:saFly;top:auto;bottom:-40px}
 @keyframes saFall{to{transform:translateY(110vh) rotate(360deg)}}
 @keyframes saFly{0%{transform:translate(0,0)}50%{transform:translate(40px,-55vh) rotate(-10deg)}100%{transform:translate(-20px,-115vh)}}

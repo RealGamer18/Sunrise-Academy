@@ -41,7 +41,7 @@
       if (S) {
         const st = S.stepsOf(S.cap())[S.step()];
         const k = st && st.r != null ? `${st.r}:${st.p}` : null;
-        out.push({ kind: "story", ic: "📜", t: S.label() || Lx("Sigue la historia", "Follow the story"), sub: Lx("Historia", "Story"), key: k, pr: null });
+        out.push({ kind: "story", ic: (window.SAI && window.SAI.tab("historia", "📜")) || "📜", t: S.label() || Lx("Sigue la historia", "Follow the story"), sub: Lx("Historia", "Story"), key: k, pr: null });
       }
     } catch (e) {}
     // aceptadas del tablón
@@ -53,7 +53,7 @@
       let pr = 0;
       try { pr = typeof questProgress === "function" ? questProgress(q) : 0; } catch (e) { pr = 0; }
       pr = Math.max(0, Math.min(q.need || 1, +pr || 0));
-      const ic = { caza: "⚔️", recolectar: "🌿", escolta: q.wi || "🛡️", buscado: "🎯", entrega: "📦" }[ty] || "📌";
+      const ic0 = { caza: "⚔️", recolectar: "🌿", escolta: q.wi || "🛡️", buscado: "🎯", entrega: "📦" }[ty] || "📌"; const ic = (window.SAI && ["caza", "recolectar", "escolta", "buscado", "entrega"].includes(ty)) ? window.SAI.img("q/" + ty, ic0) : ic0;
       out.push({ kind: "quest", ic, t: q.t, sub: { caza: Lx("Caza", "Hunt"), recolectar: Lx("Recolectar", "Gather"), escolta: Lx("Escolta", "Escort"), buscado: Lx("Se busca", "Wanted"), entrega: Lx("Entrega", "Delivery") }[ty] || Lx("Misión", "Quest"), key: k, pr, need: q.need, ready: pr >= q.need });
     }
     return out.map((m) => ({ ...m, here: m.key && m.key === here }));

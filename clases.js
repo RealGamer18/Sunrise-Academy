@@ -127,7 +127,7 @@
         <div class="sa-clsg">${Object.entries(CLS).map(([id, c]) => `<div class="sa-cls" style="--cc:${c.col}"><em>${c.im}</em><b>${c.n}</b><small>${c.pas()}</small><span>${c.skIm} <b>${c.sk}</b>: ${c.skd()}</span><button type="button" class="btn small primary" data-saclass="${id}">${Lx("Elegir", "Choose")}</button></div>`).join("")}</div></div>`;
     }
     return `<div class="sa-clsbox has" style="--cc:${k.col}"><div class="sa-clsh"><em>${k.im}</em><div><b>${k.n}</b><small>${k.pas()}</small><small>${k.skIm} <b>${k.sk}</b>: ${k.skd()} · ${Lx("cada", "every")} ${CD} ${Lx("rondas", "rounds")}</small></div>
-      <details class="sa-clsch"><summary>${Lx("Cambiar", "Change")}</summary><div>${Object.entries(CLS).filter(([id]) => id !== G.g.clase).map(([id, c]) => `<button type="button" class="btn small" data-saclass="${id}" ${G.dinero.soles < CHANGE ? "disabled" : ""}>${c.ic} ${c.n}</button>`).join("")}<small class="muted">${CHANGE} Soles</small></div></details></div></div>`;
+      <details class="sa-clsch"><summary>${Lx("Cambiar", "Change")}</summary><div>${Object.entries(CLS).filter(([id]) => id !== G.g.clase).map(([id, c]) => `<button type="button" class="btn small" data-saclass="${id}" ${G.dinero.soles < CHANGE ? "disabled" : ""}>${c.im || c.ic} ${c.n}</button>`).join("")}<small class="muted">${CHANGE} Soles</small></div></details></div></div>`;
   }
   if (typeof heroView === "function") {
     const _hv = heroView;

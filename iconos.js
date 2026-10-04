@@ -3,7 +3,7 @@
 // Si una imagen no carga, vuelve a salir el emoji de antes.
 (function () {
   if (typeof gameView !== "function") return;
-  const V = "?v=1";
+  const V = "?v=2";
   const EMO = {}; // ruta -> emoji de respaldo
   function img(path, fb, cls) {
     if (fb) EMO[path] = fb;
@@ -39,6 +39,8 @@
     obj: (n, fb) => oimg(n, fb),
     pet: (n) => (PET[n] ? img("pet/" + PET[n], petEmo(n), "pet") : null),
     src: (path) => `iconos/${path}.png${V}`,
+    path: (n) => objOf(n),
+    names: () => [...Object.keys(OBJ), ...Object.keys(WPN), ...Object.keys(EQ), ...Object.keys(PET)],
   });
 
   // --- Tipos de lugar: el icono sale en títulos, listas y chinchetas del mapa ---

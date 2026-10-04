@@ -127,7 +127,7 @@
       <div class="sa-mems"><h3>👥 ${Lx("Miembros", "Members")}</h3>${ms.map((m) => {
         const c = charById(m.id); const isMe = m.id === G.id; const d = g.don?.[m.id] || {};
         const acts = me === "lider" && !isMe ? `${m.rank !== "oficial" ? `<button type="button" class="chip" data-sagrank="${m.id}|up" title="${Lx("Ascender", "Promote")}">⬆️</button>` : ""}${m.rank !== "recluta" ? `<button type="button" class="chip" data-sagrank="${m.id}|down" title="${Lx("Bajar", "Demote")}">⬇️</button>` : ""}<button type="button" class="chip" data-sagkick="${m.id}" title="${Lx("Expulsar", "Kick")}">✖</button>` : me === "oficial" && m.rank === "recluta" ? `<button type="button" class="chip" data-sagrank="${m.id}|up">⬆️</button>` : "";
-        return `<div class="sa-mem ${isMe ? "me" : ""}"><span>${RANKS[m.rank][1]}</span><div><b>${escx(m.n)}</b><small>${RANKS[m.rank][2]()}${c?.nivel ? ` · ${Lx("Nv", "Lv")} ${c.nivel}` : ""}${c?.g?.clase && window.SA_CLASES?.CLS[c.g.clase] ? ` · ${window.SA_CLASES.CLS[c.g.clase].ic}` : ""} · ☀ ${d.s || 0} 🪨 ${d.m || 0}</small></div><div class="sa-macts">${acts}</div></div>`;
+        return `<div class="sa-mem ${isMe ? "me" : ""}"><span>${RANKS[m.rank][1]}</span><div><b>${escx(m.n)}</b><small>${RANKS[m.rank][2]()}${c?.nivel ? ` · ${Lx("Nv", "Lv")} ${c.nivel}` : ""}${c?.g?.clase && window.SA_CLASES?.CLS[c.g.clase] ? ` · ${(window.SA_CLASES.CLS[c.g.clase].im || window.SA_CLASES.CLS[c.g.clase].ic)}` : ""} · ☀ ${d.s || 0} 🪨 ${d.m || 0}</small></div><div class="sa-macts">${acts}</div></div>`;
       }).join("")}</div>
       <div class="row"><button type="button" class="btn small ghost" data-sagleave="1">🚪 ${Lx("Salir del gremio", "Leave guild")}</button></div></div>`;
   }
