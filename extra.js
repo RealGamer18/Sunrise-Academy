@@ -16,7 +16,7 @@
   const W = () => { const g = G.g; if (!g.w) g.w = {}; const w = g.w; for (const k of ["dunDay", "pvpDay", "wb"]) if (!w[k]) w[k] = {}; return w; };
   const others = () => Store.all.filter((c) => c.owner !== Store.uid && c.g && c.g.loc);
   const meAll = () => Store.all.map((c) => (c.id === G.id ? G : c));
-  const isMat = (n) => !SHOP.some((s) => s.n === n) && !ATTR_ITEMS[n] && !WEAR[n] && WEAPONS[n] == null && !/Libros|Uniforme|Poción|Tónico/.test(n);
+  const isMat = (n) => !SHOP.some((s) => s.n === n) && !ATTR_ITEMS[n] && !WEAR[n] && WEAPONS[n] == null && !/Libros|Uniforme|Poción|Tónico|Núcleo de evolución/.test(n);
   const addAct = (t) => { if (G?.g) G.g.act = { t, at: Date.now() }; };
 
   // =====================================================================
@@ -130,10 +130,10 @@
   // =====================================================================
   // 3. FORJA: mejorar el arma equipada (+1 … +6)
   // =====================================================================
-  const FORGE = { "alba:0": { max: 2, who: "Herrero del pueblo" }, "esc:1": { max: 4, who: "Durgan" }, "quem:0": { max: 6, who: "Ignara" }, "cap:1": { max: 5, who: "Gremio de herreros" } };
-  const UP = /^(.*) \+(\d)$/;
+  const FORGE = { "alba:0": { max: 3, who: "Herrero del pueblo" }, "esc:1": { max: 5, who: "Durgan" }, "quem:0": { max: 10, who: "Ignara" }, "cap:1": { max: 8, who: "Gremio de herreros" } };
+  const UP = /^(.*) \+(\d+)$/;
   function ensureW(n) {
-    if (!n || WEAPONS[n] != null) return; const m = UP.exec(n); if (!m || WEAPONS[m[1]] == null) return;
+    if (!n || WEAPONS[n] != null) return; try { window.SA_EVO?.ensure(n); } catch (e) {} if (WEAPONS[n] != null) return; const m = UP.exec(n); if (!m) return; try { window.SA_EVO?.ensure(m[1]); } catch (e) {} if (WEAPONS[m[1]] == null) return;
     const base = m[1], k = +m[2]; WEAPONS[n] = WEAPONS[base] + k * Math.max(2, Math.round(WEAPONS[base] * 0.08));
     WEAPON_TRAITS[n] = WEAPON_TRAITS[base] || []; if (WEAPON_AFF[base]) WEAPON_AFF[n] = WEAPON_AFF[base];
   }
@@ -156,7 +156,7 @@
   function forgeBox() {
     const f = FORGE[hereKey()]; if (!f) return ""; const n = G.g.arma.n; const k = lvlOf(n) + 1; const c = forgeCost(k); const nn = `${baseOf(n)} +${k}`; ensureW(nn);
     return `<div class="card mini forge"><b>🔨 ${L("Forja", "Forge")} · ${esc(f.who)} <small class="muted">(${L("hasta", "up to")} +${f.max})</small></b>
-      ${k > f.max ? `<p class="note">${L(`Tu ${esc(n)} ya está al máximo de esta forja. ${f.max < 6 ? "Ignara, en Forjaroja, llega a +6." : ""}`, "Max for this forge.")}</p>` : `<p>${esc(n)} <b>(${L("Poder", "Power")} ${G.g.arma.poder})</b> ➜ <b>${esc(nn)} (${L("Poder", "Power")} ${WEAPONS[nn]})</b></p>
+      ${k > f.max ? `<p class="note">${L(`Tu ${esc(n)} ya está al máximo de esta forja. ${f.max < 10 ? "Ignara, en Forjaroja, llega a +10." : "Ya puedes evolucionarla (mira abajo)."}`, "Max for this forge.")}</p>` : `<p>${esc(n)} <b>(${L("Poder", "Power")} ${G.g.arma.poder})</b> ➜ <b>${esc(nn)} (${L("Poder", "Power")} ${WEAPONS[nn]})</b></p>
       <p class="note">${L("Cuesta", "Costs")} ${c.soles} Soles + ${c.need} ${L("materiales", "materials")}${c.use.length ? `: ${c.use.map(([m, q]) => `${q}× ${esc(m)}`).join(", ")}` : ""}${c.ok ? "" : L(" · te faltan materiales (caza y explora)", " · not enough materials")}</p>
       <button type="button" class="btn small primary" data-xforge="1" ${c.ok && G.dinero.soles >= c.soles ? "" : "disabled"}>🔨 ${L("Mejorar arma", "Upgrade weapon")}</button>`}</div>`;
   }
@@ -491,7 +491,7 @@
     [null, () => L("Cada día tienes 3 misiones diarias en la pestaña Lugar. ¡Eso es todo! Puedes volver a ver esta guía con el botón ❓ de arriba.", "3 daily quests in the Place tab. Reopen this guide with ❓.")],
   ];
   const NEWS = () => L(`<b>🆕 Novedades en Solvaria</b><ul>
-    <li>💬 <b>Chat del grupo</b> (botón abajo a la derecha)</li><li>🔨 <b>Forja</b>: mejora tu arma hasta +6 (Pueblo del Alba, Minas de Durgan, Gremios, Forjaroja)</li>
+    <li>💬 <b>Chat del grupo</b> (botón abajo a la derecha)</li><li>🔨 <b>Forja</b>: mejora tu arma hasta +10 y evolúcionala (Pueblo del Alba, Minas de Durgan, Gremios, Forjaroja)</li>
     <li>🛡️ <b>Armaduras y accesorios</b> en las armerías, mazmorras y jefes</li><li>🌋 <b>Jefe mundial</b> cada semana: todos le bajan la vida</li>
     <li>🏰 <b>Mazmorras</b> con pisos seguidos, en solitario o en grupo</li><li>🤺 <b>Duelos</b> contra tus amigos en la Arena de Trigalia y el Coliseo</li>
     <li>🏦 <b>Cofre del grupo</b> en la pestaña Grupo</li><li>📅 <b>3 misiones diarias</b> en la pestaña Lugar</li><li>🐾 <b>Mascotas y monturas</b> (la montura acorta los viajes a pie)</li></ul>`, "<b>🆕 What's new</b>: chat, forge, armor, world boss, dungeons, duels, group chest, dailies, pets & mounts.");

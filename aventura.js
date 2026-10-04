@@ -245,6 +245,7 @@
       if (left > 0) ok = false;
     }
     if ((rec.soles || 0) > G.dinero.soles) ok = false;
+    if (rec.where && !rec.where.includes(`${G.g.loc.r}:${G.g.loc.p}`)) ok = false;
     return { ok, use };
   }
   const canWork = () => { const pl = P[G.g.loc.r][G.g.loc.p]; return HUB_TYPES.includes(pl.t) || ["academia", "santuario"].includes(pl.t); };
@@ -264,15 +265,16 @@
     el.innerHTML = `<div class="xc-pot">${rec.t === "alq" ? "⚗️" : rec.t === "coc" ? "🍳" : "🗡️"}<div class="xc-bub">${bub}</div></div><div class="xc-out">${ic}<b>${esc(rec.out)}${rec.q > 1 ? ` ×${rec.q}` : ""}</b></div>`;
     document.body.appendChild(el); setTimeout(() => el.classList.add("done"), 1100); setTimeout(() => el.classList.add("out"), 2100); setTimeout(() => el.remove(), 2600);
   }
+  window.SA_TALLER = { RECIPES, GROUPS, TABS, plan, ITEM, craft, craftFx, canWork };
   function workshopBox() {
     if (!canWork()) return ""; const open = gsel.xws; const tab = gsel.xwsTab || "alq";
     const head = `<div class="row between"><b>⚗️ ${L("Taller: alquimia, cocina y aceites", "Workshop: alchemy, cooking & oils")}</b><button type="button" class="btn small ${open ? "" : "primary"}" data-xws="1">${open ? L("Cerrar", "Close") : L("Abrir", "Open")}</button></div>`;
     if (!open) return `<div class="card mini wsbox">${head}<small class="muted">${L("Convierte tus materiales en pociones, comidas con bonos y aceites para el arma.", "Turn materials into potions, food and oils.")}</small></div>`;
     const list = RECIPES.map((r, i) => ({ r, i })).filter((x) => x.r.t === tab);
-    const cards = list.map(({ r, i }) => { const it = ITEM(r.out); const p = plan(r); const ic = it?.ic || (r.out.includes("maná") ? "💧" : r.out.includes("Tónico") ? "⚡" : r.out.includes("mayor") ? "❤️‍🔥" : "❤️");
+    const cards = list.map(({ r, i }) => { const it = ITEM(r.out); const p = plan(r); const ic = r.ic || it?.ic || (r.out.includes("maná") ? "💧" : r.out.includes("Tónico") ? "⚡" : r.out.includes("mayor") ? "❤️‍🔥" : "❤️");
       const need = r.need.map(([g, q]) => { const have = g.startsWith("i:") ? G.g.inv[g.slice(2)] || 0 : GROUPS[g].m.reduce((a, n) => a + (G.g.inv[n] || 0), 0); const lb = g.startsWith("i:") ? g.slice(2) : GROUPS[g].l(); const gi = g.startsWith("i:") ? "✦" : GROUPS[g].i;
         return `<span class="ing ${have >= q ? "ok" : "no"}" title="${g.startsWith("i:") ? "" : esc(GROUPS[g].m.join(", "))}">${gi} ${q}× ${esc(lb)} <small>(${have})</small></span>`; }).join("") + (r.soles ? `<span class="ing ${G.dinero.soles >= r.soles ? "ok" : "no"}">☀ ${r.soles}</span>` : "");
-      return `<div class="rec ${p.ok ? "can" : ""}"><div class="rec-ic">${ic}</div><div class="rec-b"><b>${esc(r.out)}${r.q > 1 ? ` ×${r.q}` : ""}</b><small>${esc(it?.desc || SHOP.find((s) => s.n === r.out)?.desc || "")}</small><div class="ings">${need}</div>${p.ok ? `<small class="uses">${L("Usará", "Uses")}: ${p.use.map(([n, q]) => `${q}× ${esc(n)}`).join(", ")}</small>` : ""}</div>
+      return `<div class="rec ${p.ok ? "can" : ""}"><div class="rec-ic">${ic}</div><div class="rec-b"><b>${esc(r.out)}${r.q > 1 ? ` ×${r.q}` : ""}</b><small>${esc((typeof r.desc === "function" ? r.desc() : r.desc) || it?.desc || SHOP.find((s) => s.n === r.out)?.desc || "")}</small>${r.where && !r.where.includes(`${G.g.loc.r}:${G.g.loc.p}`) ? `<small class="note">🔨 ${L("Solo en una forja (Amanecer, Minas de Durgan, Gremio de Capitalia o Forjaroja)", "Forge only")}</small>` : ""}<div class="ings">${need}</div>${p.ok ? `<small class="uses">${L("Usará", "Uses")}: ${p.use.map(([n, q]) => `${q}× ${esc(n)}`).join(", ")}</small>` : ""}</div>
         <button type="button" class="btn small ${p.ok ? "primary" : ""}" data-xcraft="${i}" ${p.ok ? "" : "disabled"}>${TABS[r.t][0]} ${L("Preparar", "Make")}</button></div>`; }).join("");
     return `<div class="card mini wsbox open">${head}<div class="shtabs">${Object.entries(TABS).map(([k, [ic, lb]]) => `<button type="button" class="chip ${tab === k ? "on" : ""}" data-xwstab="${k}">${ic} ${lb()}</button>`).join("")}</div>
       <div class="recs">${cards}</div><p class="note">${L("Cada ingrediente pide un tipo (hierba, cristal, mineral, bestia o comida): se usa el que más tengas. La carne sale al cazar animales y el pescado al explorar en lagos y costas. Las comidas y aceites se usan desde la Bolsa; los elixires, en combate (Objetos).", "Any item of the right type works.")}</p></div>`;
@@ -368,7 +370,7 @@
     if (view.name !== "game" || !G) return; const t = ev.target.closest("button"); if (!t) return; const d = t.dataset; const stop = () => ev.stopPropagation();
     if (d.xws) { stop(); gsel.xws = !gsel.xws; return render(); }
     if (d.xwstab) { stop(); gsel.xwsTab = d.xwstab; return render(); }
-    if (d.xcraft) { stop(); return craft(+d.xcraft); }
+    if (d.xcraft) { stop(); return (window.SA_TALLER?.start || craft)(+d.xcraft); }
     if (d.qfight) { stop(); return questFight(d.qfight); }
   }, true);
   const _render = render;

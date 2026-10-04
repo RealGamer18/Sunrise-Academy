@@ -22,6 +22,8 @@
     try {
       const W = window.SA_EXTRA?.WEAR || {};
       if (W[n]?.r) return W[n].r;
+      if (n === "Núcleo de evolución") return "l";
+      const ev = window.SA_EVO?.info(n)?.tier || 0; if (ev >= 2) return "l"; if (ev === 1) return "e";
       if (cat === "armas" || (typeof WEAPONS !== "undefined" && WEAPONS[n] != null && cat !== "material")) {
         const p = (typeof WEAPONS !== "undefined" && WEAPONS[n]) || 0;
         return p >= 60 ? "l" : p >= 35 ? "e" : p >= 20 ? "r" : "c";
