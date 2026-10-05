@@ -393,7 +393,7 @@
 .cbtn.defpulse{border-color:#ffd84a !important;box-shadow:0 0 0 2px #ffd84a88;animation:itnP 1s ease-in-out infinite}
 .qhere{border-color:#ffd84a88}.qhere .row{gap:10px;flex-wrap:wrap}.qhere .row+.row{margin-top:8px}.wanted b{color:#ff8a7a}
 .wsbox.open{border-color:#9be07a66}
-.recs{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;margin-top:6px}
+.recs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(290px,100%),1fr));gap:10px;margin-top:6px}
 .rec{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel-2);opacity:.7;transition:transform .15s,opacity .15s,border-color .15s}
 .rec.can{opacity:1;border-color:#9be07a66}.rec:hover{transform:translateY(-2px)}
 .rec-ic{font-size:28px;width:44px;height:44px;display:grid;place-items:center;border-radius:8px;background:#0b131c;flex:none}

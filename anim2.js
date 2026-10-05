@@ -251,7 +251,7 @@
 .sl-skip{position:absolute;top:14px;right:16px;background:#0b131ccc;border:1px solid var(--line);color:var(--ink-2);border-radius:999px;padding:6px 14px;cursor:pointer;font-family:var(--display)}
 /* tablón */
 .qboard .qb-head{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
-.qb-wood{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;padding:18px 14px;border-radius:8px;background:repeating-linear-gradient(90deg,#3a2615 0 46px,#33210f 46px 48px),linear-gradient(#3a2615,#2a1a0d);box-shadow:inset 0 0 30px #000a}
+.qb-wood{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:16px;padding:18px 14px;border-radius:8px;background:repeating-linear-gradient(90deg,#3a2615 0 46px,#33210f 46px 48px),linear-gradient(#3a2615,#2a1a0d);box-shadow:inset 0 0 30px #000a}
 .qnote{position:relative;background:linear-gradient(160deg,#f3e3bf,#e2c992);color:#2b1d0e;border-radius:3px;padding:18px 14px 12px;transform:rotate(var(--rot));box-shadow:0 6px 14px #0009;display:flex;flex-direction:column;gap:6px;transition:transform .2s}
 .qnote:hover{transform:rotate(0) translateY(-3px) scale(1.02)}
 .qnote b{font-family:var(--display);font-size:15.5px;color:#2b1d0e}.qnote small{color:#5a4326}
@@ -272,7 +272,7 @@
 /* tienda */
 .shopc{animation:tsIn .3s ease}
 .shtabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px}.shtabs small{opacity:.7}
-.shgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.shgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:10px}
 .shc{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--panel-2);animation:plIn .35s ease both;transition:transform .15s,border-color .15s,box-shadow .15s}
 .shc:hover{transform:translateY(-2px);border-color:var(--c,#d9a441);box-shadow:0 6px 16px #0006}
 .shc.w{--c:#d9a441}.shc.poor{opacity:.6}

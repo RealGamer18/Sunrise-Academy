@@ -371,7 +371,7 @@ body.sa-night .scene{filter:brightness(.6) saturate(.8) hue-rotate(-15deg)}
 .sa-evic{font-size:32px;filter:drop-shadow(0 0 10px #ff8a3a88);animation:saBob 3s ease-in-out infinite}
 @keyframes saBob{50%{transform:translateY(-4px) rotate(-6deg)}}
 .sa-evh>div{flex:1;display:flex;flex-direction:column}.sa-evh b{font-family:var(--display);font-size:17px;color:#ffcf9a}.sa-evh small{color:#e8c9b0}
-.sa-evshop{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin-top:10px}
+.sa-evshop{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(210px,100%),1fr));gap:6px;margin-top:10px}
 .sa-evit{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:3px;background:#00000044;border:1px solid #ffffff12}
 .sa-evit em{font-style:normal;font-size:22px}.sa-evit em .sai{width:40px;height:40px;vertical-align:middle}.sa-evic .sai{width:56px;height:56px;vertical-align:middle}.sa-evcard .btn .sai,.sa-evh .pill .sai,.sa-evh small .sai{width:18px;height:18px;vertical-align:-4px}.sa-evit>div{flex:1;min-width:0;display:flex;flex-direction:column}.sa-evit b{font-size:13.5px}.sa-evit small{color:var(--ink-2);font-size:11.5px}
 #sa-deco{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}

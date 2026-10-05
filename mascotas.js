@@ -306,7 +306,7 @@
   const css = document.createElement("style");
   css.textContent = `
 .petpanel h3 small{font-weight:400}
-.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;margin-top:8px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(290px,100%),1fr));gap:10px;margin-top:8px}
 .pcard{display:flex;gap:10px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,var(--rc,#8a96a8) 55%,transparent);background:linear-gradient(160deg,#1b2638,#111a26);box-shadow:inset 0 0 18px color-mix(in srgb,var(--rc,#8a96a8) 18%,transparent);animation:pcIn .35s ease both}
 .pcard.on{border-color:#ffd84a;box-shadow:0 0 0 2px #ffd84a55,inset 0 0 18px #ffd84a22}
 .pbig{position:relative;flex:none;width:74px;height:74px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--rc,#8a96a8) 35%,#0b131c),#0b131c 70%);border:2px solid color-mix(in srgb,var(--rc,#8a96a8) 70%,transparent)}

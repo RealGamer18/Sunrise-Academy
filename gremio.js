@@ -571,7 +571,7 @@
 .sa-spot small{font-size:11px;color:#f2e4c0;text-shadow:0 1px 2px #000;line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .sa-spot .plus{font-size:22px;color:#ffffff55}
 .sa-rmpick{padding:10px;border:1px solid #d9a44155;border-radius:3px;background:#0b131c}
-.sa-rmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;margin:8px 0}
+.sa-rmgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(110px,100%),1fr));gap:6px;margin:8px 0}
 .sa-rmc{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1px solid #ffffff18;border-radius:3px;background:#ffffff08;color:var(--ink);cursor:pointer;font:inherit}
 .sa-rmc span{font-size:24px}.sa-rmc .sai{width:32px;height:32px}.sa-rmc small{font-size:11px;text-align:center}.sa-rmc.rm{border-color:#e0735c66}
 /* jefe de gremio */

@@ -201,6 +201,31 @@
   }
   const svgURL = (b) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgOf(b));
 
+  // Apariencia del asistente (textos de LOOK/ACCESORIOS) -> piezas del creador. Lo no elegido usa el preset de la raza.
+  const LK = {
+    ha: { Calvo: 0, Rapado: 0, Corto: 1, "Flequillo largo": 2, Largo: 3, Liso: 3, Ondulado: 3, Coleta: 4, Rizado: 5, Moño: 6, Trenzado: 7, Rastas: 7, Cresta: 8, "Melena salvaje": 9 },
+    hc: { Negro: "#1a1410", Castaño: "#6a4224", Rubio: "#e8d8a0", Pelirrojo: "#a8442a", Blanco: "#f4f0e8", Plateado: "#c8ccd8", Gris: "#8a8a90", Azul: "#2a6a90", Verde: "#4a7a30", Violeta: "#5a3aa0", Rosa: "#c06ab0", Dorado: "#d08a3a", Bicolor: "#b02a3a" },
+    ec: { Marrones: "#6a4a2a", Negros: "#3a2a1a", Azules: "#3a7ac0", Verdes: "#3aa060", Grises: "#a0a0a8", Ámbar: "#d08a20", Dorados: "#ffcc30", Violetas: "#9a4aff", Rojos: "#c02030", Plateados: "#8ab0d0", "Uno de cada color": "#40c0ff", "Brillan en la oscuridad": "#40c0ff" },
+    sk: { Pálida: "#f6dcc8", Clara: "#f0c8a8", Trigueña: "#e0b48a", Morena: "#c98e64", Bronceada: "#a06a44", Oscura: "#6e4428", Verdosa: "#6a8a3a", Azulada: "#8ad0d8", Grisácea: "#8a96a0", "De corteza": "#8a6a44", Metálica: "#8a96a0" },
+    cl: { "Armadura pesada": 1, "Capa de viajero": 2, "Estilo ninja": 2, "Ropa de explorador": 2, "Túnica de mago": 3, "Estilo gótico": 3, "Armadura ligera": 4, "Estilo pirata": 4, "Ropa de cazador": 4 },
+    col: { Negro: "#1e2230", Blanco: "#e8e0d0", Rojo: "#8a1e24", Carmesí: "#6a1e24", Azul: "#2a3a6a", Verde: "#2a5a3a", Dorado: "#b08a3a", Plateado: "#8a8a96", Morado: "#4a2a6a", Marrón: "#5a4028", Gris: "#6a6a72" },
+    rasgo: { "Cicatriz en la cara": { mk: 2 }, "Quemadura antigua": { mk: 2 }, Tatuajes: { mk: 4 }, Pecas: { mk: 1 }, "Runas en la piel": { mk: 3 }, Colmillos: { tu: 1 }, "Cuernos pequeños": { ho: 4 }, "Ojo cubierto": { ac: 3 } },
+    ac: { Diadema: 1, Pendientes: 2, "Parche en el ojo": 3, "Flor en el pelo": 4, Gafas: 5 },
+  };
+  function bFromLook(raza, L = {}, acc = []) {
+    const b = bOf(raza);
+    if (L.pelo_tipo in LK.ha) b.ha = LK.ha[L.pelo_tipo];
+    if (LK.hc[L.pelo_color]) b.hc = LK.hc[L.pelo_color];
+    if (LK.ec[L.ojos]) { b.ec = LK.ec[L.ojos]; if (L.ojos === "Brillan en la oscuridad") b.gl = 1; }
+    if (LK.sk[L.piel]) b.sk = LK.sk[L.piel];
+    if (L.piel === "Con escamas") b.mk = 5;
+    if (L.ropa) b.cl = LK.cl[L.ropa] || 0;
+    if (L.ropa_color) { const [a, c] = L.ropa_color.split(" y ").map((s) => s[0].toUpperCase() + s.slice(1)); if (LK.col[a]) b.c1 = LK.col[a]; if (LK.col[c]) b.c2 = LK.col[c]; }
+    Object.assign(b, LK.rasgo[L.rasgo] || {});
+    const a = acc.find((x) => x in LK.ac); if (a) b.ac = LK.ac[a];
+    return b;
+  }
+
   // =================================================================
   // 3. Desbloqueos
   // =================================================================
@@ -401,7 +426,8 @@
   const AVK = ["m", "base", "b", "z", "x", "y", "hue", "sat", "bri", "con", "fb", "vg", "bg", "fr", "em"];
   function keyOf(av, raza) { let h = 0; const s = JSON.stringify([raza, AVK.map((k) => av[k]), av.img ? av.img.length + av.img.slice(-40) : 0]); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return "a" + (h >>> 0).toString(36); }
   const charOf = (c) => (G && c && (c.id === G.id) ? G : c);
-  const avOf = (c) => { const cc = charOf(c); const av = cc?.g?.av; return av && typeof av === "object" ? av : null; };
+  // g.av = retrato editado en el juego; c.av = cara diseñada en el asistente de creación.
+  const avOf = (c) => { const cc = charOf(c); const av = cc?.g?.av || cc?.av; return av && typeof av === "object" ? av : null; };
   function urlFor(c) {
     const cc = charOf(c); const av = avOf(cc); if (!av) return null;
     const k = keyOf(av, cc.raza); if (done.has(k)) return { k, url: done.get(k) };
@@ -430,6 +456,8 @@
     titleOf: (c) => { const av = avOf(c); return av?.ti ? titleName(av.ti) : ""; },
     nameColor: (c) => avOf(c)?.nc || "",
     svgOf, compose, open: () => openEditor(),
+    freeBgs: BGS.slice(0, 7).map((b) => [b.id, b.n()]),
+    lookAv: (raza, look, acc) => ({ m: "build", b: bFromLook(raza, look, acc), z: 1 }),
   };
 
   // =================================================================
@@ -439,7 +467,7 @@
   const dflt = () => ({ m: "race", base: RID(G.raza), z: 1.32, x: 0, y: 0, hue: 0, sat: 100, bri: 100, con: 100, fb: 0, vg: 0, bg: "none", fr: "none", au: "none", ti: "", em: "", nc: "" });
   function openEditor() {
     if (!G?.g) return;
-    D = JSON.parse(JSON.stringify(G.g.av || dflt())); if (!D.b) D.b = bOf(G.raza);
+    D = JSON.parse(JSON.stringify(G.g.av || { ...dflt(), ...(G.av || {}) })); if (!D.b) D.b = bOf(G.raza);
     tab = "ret"; draw(); refresh();
   }
   function close() { document.getElementById("sa-ave")?.remove(); D = null; }
@@ -632,9 +660,9 @@ img[data-au]{animation:saAu 2.8s ease-in-out infinite}
 .ave-tabs,.ave-sub{display:flex;flex-wrap:wrap;gap:6px}
 .ave-sub{margin-bottom:8px}
 .ave-body h4{margin:12px 0 6px;font-family:var(--display);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#e6c47a;font-weight:500}
-.ave-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:6px}
-.ave-g.sm{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
-.ave-g.em{grid-template-columns:repeat(auto-fill,minmax(92px,1fr))}
+.ave-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(132px,100%),1fr));gap:6px}
+.ave-g.sm{grid-template-columns:repeat(auto-fill,minmax(min(96px,100%),1fr))}
+.ave-g.em{grid-template-columns:repeat(auto-fill,minmax(min(92px,100%),1fr))}
 .ave-o{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:40px;padding:7px 8px;border:1px solid #e6c47a33;background:#ffffff07;color:var(--ink);font-family:var(--body);cursor:pointer;text-align:center}
 .ave-o b{font-size:13px;font-weight:600}.ave-o small{font-size:11px;color:var(--muted)}
 .ave-o:hover:not(:disabled){border-color:#e6c47aaa;background:#e6c47a12}
@@ -649,7 +677,7 @@ img[data-au]{animation:saAu 2.8s ease-in-out infinite}
 .ave-pick{position:relative;overflow:hidden;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
 .ave-pick input{position:absolute;inset:-4px;opacity:0;cursor:pointer;width:40px;height:40px}
 .ave-pre{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:10px}.ave-pre span{font-size:12.5px;color:var(--muted);margin-right:4px}.ave-pre .chip{font-size:12px;padding:3px 10px}
-.ave-races{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px}
+.ave-races{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(74px,100%),1fr));gap:8px}
 .ave-races button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;border:1px solid transparent;background:none;color:var(--ink-2);cursor:pointer}
 .ave-races img{width:62px;height:62px;border-radius:50%}
 .ave-races button.on{border-color:#f3d690;background:#e6c47a14}.ave-races small{font-size:11px}
@@ -664,7 +692,7 @@ img[data-au]{animation:saAu 2.8s ease-in-out infinite}
   .ave-l{position:static;flex-direction:row;flex-wrap:wrap;justify-content:center}
   .ave-big{width:180px;height:180px}
   .ave-minis{display:none}
-  .ave-g{grid-template-columns:repeat(auto-fill,minmax(108px,1fr))}
+  .ave-g{grid-template-columns:repeat(auto-fill,minmax(min(108px,100%),1fr))}
   .ave-f{flex-wrap:wrap}.ave-f span{display:none}.ave-f .btn{flex:1}
 }
 @media (prefers-reduced-motion:reduce){img[data-au],.ave-big.sa-au canvas,.dpor .daura.sa-au-big,.sa-nc-rb{animation:none!important}}

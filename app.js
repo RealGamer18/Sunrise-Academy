@@ -367,12 +367,36 @@ const STEPS = ["Concepto", "Raza", "Nacimiento", "Atributos", "Afinidad", "Maná
 function dieBtn(action, label) { return `<button type="button" class="die" data-act="${action}" title="Tirar los dados">🎲 ${esc(label)}</button>`; }
 function roll(label, value, detail) { return `<div class="roll"><span class="rv">${value}</span><span>${esc(label)}${detail ? ` · <b>${esc(detail)}</b>` : ""}</span></div>`; }
 
+// ===== Retrato del asistente =====
+// "Pintado" usa los retratos de razas/ con tono, fondo y marco; "Dibujado" usa el creador por piezas con la apariencia elegida.
+const PTONOS = [["Natural", {}], ["Cálido", { hue: -10, sat: 115, bri: 105 }], ["Frío", { hue: 12, sat: 80, con: 105 }], ["Sombrío", { sat: 70, bri: 82, con: 118 }], ["Vívido", { sat: 140, con: 110 }], ["Desvaído", { sat: 45, bri: 108, con: 92 }]];
+// Sin draft.port (borradores y personajes de antes del retrato) no hay av: se sigue viendo la imagen de raza tal cual.
+function draftAv() {
+  if (!window.SA_AV || !draft.port) return undefined;
+  const p = draft.port; const raza = draft.raza || "humano";
+  if (p.st === "build") return window.SA_AV.lookAv(raza, draft.look, draft.accesorios);
+  const bg = p.bg || "none";
+  return { m: "race", base: p.base || raza, z: 1.32, x: 0, y: 0, ...(PTONOS.find((t) => t[0] === p.tono)?.[1] || {}), bg, fb: bg === "none" ? 0 : 45, fr: p.fr || "oro" };
+}
+function portraitCard() {
+  if (!window.SA_AV) return "";
+  const p = draft.port || {}; const on = (k, v, d) => ((p[k] ?? d) === v ? "on" : "");
+  const chip = (k, v, label, d) => `<button type="button" class="chip ${on(k, v, d)}" aria-pressed="${!!on(k, v, d)}" data-port="${k}|${esc(v)}">${esc(label)}</button>`;
+  const painted = `<h4>Retrato base</h4><div class="pt-grid">${RAZAS.map((r) => `<button type="button" class="pt ${on("base", r.id, draft.raza || "humano")}" aria-pressed="${!!on("base", r.id, draft.raza || "humano")}" data-port="base|${r.id}" title="${esc(r.n)}">${raceImg(r.id, "rimg pt-img")}<small>${esc(r.n)}</small></button>`).join("")}</div>
+    <h4>Tono</h4><div class="chips">${PTONOS.map(([n]) => chip("tono", n, n, "Natural")).join("")}</div>
+    <h4>Fondo</h4><div class="chips">${window.SA_AV.freeBgs.map(([id, n]) => chip("bg", id, n, "none")).join("")}</div>
+    <h4>Marco</h4><div class="chips">${chip("fr", "oro", "Oro", "oro")}${chip("fr", "none", "Sin marco", "oro")}</div>`;
+  return `<div class="card look"><div class="row between"><h3>Retrato</h3><div class="chips">${chip("st", "paint", "🖌️ Pintado", "paint")}${chip("st", "build", "✏️ Dibujado por piezas", "paint")}</div></div>
+    ${p.st === "build" ? `<p class="note">El retrato se dibuja con la apariencia que elijas abajo.</p>` : painted}</div>`;
+}
+
 function stepConcept() {
   return `<p class="lead">¿Quién es tu personaje? Una o dos frases bastan.</p>
   <div class="grid2">
     <label class="f">Nombre<input id="f-nombre" value="${esc(draft.nombre)}" maxlength="40" placeholder="Ej.: Kira"></label>
     <label class="f">Edad<input id="f-edad" type="number" min="18" max="999" value="${esc(draft.edad)}"></label>
   </div>
+  ${portraitCard()}
   <div class="card look"><div class="row between"><h3>Apariencia</h3>${dieBtn("look", "Todo al azar")}</div>
     <div class="lookgrid">${LOOK.map(([k, n, opts]) => `<label class="f">${esc(n)}<div class="row"><select data-look="${k}"><option value="">Elige…</option>${opts.map((o) => `<option ${draft.look?.[k] === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select><button type="button" class="die small" data-act="look:${k}" title="Tirar">🎲</button></div></label>`).join("")}</div>
     <div class="row between" style="margin-top:6px"><h3>Accesorios <span class="muted">(hasta 4)</span></h3>${dieBtn("acc", "Al azar")}</div>
@@ -420,10 +444,25 @@ function stepBirth() {
     ${draft.nacRoll ? roll("Sacaste", draft.nacRoll, row?.[3]) : ""}`;
 }
 
+// Radar de atributos: total (relleno) y, en el asistente, el reparto propio sin raza (discontinuo).
+function attrRadar(base, tot) {
+  const S = 300, C = S / 2, R = 100, lo = Math.min(-1, ...ATTRS.map(([k]) => tot[k])), hi = Math.max(4, ...ATTRS.map(([k]) => tot[k]));
+  const n = ATTRS.length, ang = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
+  const pt = (i, v, r = R * (v - lo) / (hi - lo)) => [C + r * Math.cos(ang(i)), C + r * Math.sin(ang(i))];
+  const poly = (o) => ATTRS.map(([k], i) => pt(i, o[k]).map((x) => x.toFixed(1)).join(",")).join(" ");
+  const rings = Array.from({ length: hi - lo }, (_, j) => j + lo + 1).map((v) => `<polygon class="ar-ring${v === 0 ? " zero" : ""}" points="${ATTRS.map((_, i) => pt(i, v).join(",")).join(" ")}"/>`).join("");
+  const axes = ATTRS.map(([k, nm], i) => { const [x, y] = pt(i, 0, R); const [lx, ly] = pt(i, 0, R + 22); return `<line class="ar-axis" x1="${C}" y1="${C}" x2="${x}" y2="${y}"/><text class="ar-lb" x="${lx}" y="${ly}" text-anchor="${Math.abs(lx - C) < 4 ? "middle" : lx < C ? "end" : "start"}" dominant-baseline="middle">${esc(nm.split(/[ /&]/)[0])}</text>`; }).join("");
+  const dots = ATTRS.map(([k, nm], i) => { const [x, y] = pt(i, tot[k]); const b = base ? tot[k] - base[k] : 0; return `<circle class="ar-dot" cx="${x}" cy="${y}" r="4.5"><title>${esc(nm)}: ${sgn(tot[k])}${b ? ` (raza ${sgn(b)})` : ""}</title></circle>`; }).join("");
+  return `<figure class="ar"><svg viewBox="-80 -6 460 312" role="img" aria-label="Gráfico de atributos">${rings}${axes}
+    <polygon class="ar-tot" points="${poly(tot)}"/>${base ? `<polygon class="ar-base" points="${poly(base)}"/>` : ""}${dots}</svg>
+    ${base ? `<figcaption><span><i class="ar-k tot"></i>Total con raza</span><span><i class="ar-k base"></i>Tu reparto</span></figcaption>` : ""}</figure>`;
+}
+
 function stepAttrs() {
   const c = compute();
   return `<p class="lead">Todos empiezan en 0. Reparte <b>${c.pointsTotal}</b> puntos sin pasar de +3. Puedes bajar hasta dos atributos a −1 para ganar un punto por cada uno.${c.sinAfin ? " Como naciste sin afinidad, tienes 2 puntos extra." : ""} Después se suma el bono de raza.</p>
     <div class="row between"><span class="pill ${c.left === 0 ? "ok" : ""}">Te quedan ${c.left} puntos</span>${dieBtn("attrs", "Repartir al azar")}</div>
+    ${attrRadar(draft.alloc, c.attrs)}
     <div class="attrs">${ATTRS.map(([k, n]) => {
       const base = draft.alloc[k]; const tot = c.attrs[k]; const bonus = tot - base;
       return `<div class="attr"><span class="an">${esc(n)}</span>
@@ -552,7 +591,7 @@ function buildChar() {
   const t = c.tf;
   return {
     id: draft.editId || "c" + rid(), createdAt: draft.createdAt || Date.now(),
-    nombre: draft.nombre.trim(), edad: +draft.edad, apariencia: draft.apariencia, descripcion: lookText(draft), look: { ...(draft.look || {}) }, accesorios: [...(draft.accesorios || [])], hpv: 2, personalidad: draft.personalidad,
+    nombre: draft.nombre.trim(), edad: +draft.edad, apariencia: draft.apariencia, descripcion: lookText(draft), look: { ...(draft.look || {}) }, accesorios: [...(draft.accesorios || [])], av: draftAv(), hpv: 2, personalidad: draft.personalidad,
     raza: c.ra?.n || "", sub: draft.sub, mestizo: draft.mestizo ? (c.rb?.n || "") : "",
     bonoRacial: c.ra?.bono || "", habilidad: (draft.mestizo ? c.rb?.hab : c.ra?.hab) || "", debilidad: ((draft.mestizo && draft.debDe === "b" ? c.rb : c.ra)?.deb) || "",
     subTexto: c.ra?.subs.find((s) => s[0] === draft.sub)?.[1] || "",
@@ -580,7 +619,7 @@ function sheetHTML(ch, priv, preview) {
       ${ch.personalidad ? `<p class="muted">${esc(ch.personalidad)}${ch.apariencia ? " · " + esc(ch.apariencia) : ""}</p>` : ""}</div></div>
       <div class="badges"><span class="pill">Nivel ${ch.nivel}</span><span class="pill">Rango ${esc(ch.rango)}</span><span class="pill">Peldaño ${esc(ch.peldano)}</span></div></header>
     <div class="sh-grid">
-      <section><h3>Atributos</h3><div class="stats">${ATTRS.map(([k, n]) => `<div class="st"><b>${sgn(ch.atributos[k] || 0)}</b><small>${esc(n)}</small></div>`).join("")}${ch.lujuria ? `<div class="st"><b>+${ch.lujuria}</b><small>Lujuria</small></div>` : ""}</div></section>
+      <section><h3>Atributos</h3>${attrRadar(null, Object.fromEntries(ATTRS.map(([k]) => [k, ch.atributos[k] || 0])))}<div class="stats">${ATTRS.map(([k, n]) => `<div class="st"><b>${sgn(ch.atributos[k] || 0)}</b><small>${esc(n)}</small></div>`).join("")}${ch.lujuria ? `<div class="st"><b>+${ch.lujuria}</b><small>Lujuria</small></div>` : ""}</div></section>
       <section><h3>Recursos</h3><div class="res">
         <div><span>PV</span><b>${ch.pv} / ${ch.pvMax}</b></div><div><span>Energía</span><b>${ch.energia} / ${ch.energiaMax}</b></div>
         <div><span>Maná</span><b>${ch.mana} / ${ch.manaMax}</b></div><div><span>Estrés</span><b>${ch.estres} / 10</b></div>
@@ -642,13 +681,24 @@ function homeView() {
     <input type="file" id="file" accept="application/json,.json" hidden>`;
 }
 
+// Retrato en vivo: se redibuja con cada cambio porque render() reconstruye el asistente.
+function wizPreview() {
+  const r = raceById(draft.raza);
+  const av = draftAv();
+  const img = (av && window.SA_AV.face({ raza: draft.raza || "humano", av }, "rimg wp-img")) || raceImg(draft.raza || "humano", "rimg wp-img");
+  return `<aside class="wiz-prev" aria-live="polite">${img}
+    <b>${esc(draft.nombre.trim() || "Sin nombre")}</b>
+    <small>${r ? esc(r.n) + (draft.sub ? " · " + esc(draft.sub) : "") : "Raza por elegir"}</small>
+    ${draft.personalidad ? `<small class="muted">${esc(draft.personalidad)}</small>` : ""}</aside>`;
+}
+
 function wizardView() {
   const s = draft.step;
   return `<section class="panel wiz">
     <div class="row between"><button type="button" class="link" id="home">← Mis personajes</button><span class="muted">Paso ${s + 1} de ${STEPS.length}</span></div>
     <ol class="steps">${STEPS.map((n, i) => `<li><button type="button" data-step="${i}" class="${i === s ? "cur" : ""} ${i < s ? "done" : ""}">${i + 1}. ${esc(n)}</button></li>`).join("")}</ol>
     <h2>${s + 1}. ${esc(STEPS[s])}</h2>
-    <div class="stepbody">${STEP_FN[s]()}</div>
+    <div class="wiz-main"><div class="stepbody">${STEP_FN[s]()}</div>${wizPreview()}</div>
     <div class="row between nav"><button type="button" class="btn ghost" id="prev" ${s === 0 ? "disabled" : ""}>Anterior</button>${s < STEPS.length - 1 ? `<button type="button" class="btn primary" id="next">Siguiente</button>` : ""}</div>
   </section>`;
 }
@@ -775,13 +825,14 @@ document.addEventListener("click", async (ev) => {
   if (t.dataset.inc) { const k = t.dataset.inc; if (draft.alloc[k] < 3 && compute().left > 0) draft.alloc[k]++; saveDraft(); return render(); }
   if (t.dataset.dec) { const k = t.dataset.dec; const negs = ATTRS.filter(([x]) => draft.alloc[x] < 0).length; if (draft.alloc[k] > 0 || (draft.alloc[k] === 0 && negs < 2)) draft.alloc[k]--; saveDraft(); return render(); }
   if (t.dataset.acc) { const x = t.dataset.acc; const l = draft.accesorios || []; draft.accesorios = l.includes(x) ? l.filter((y) => y !== x) : [...l, x].slice(-4); saveDraft(); return render(); }
+  if (t.dataset.port) { const [k, v] = t.dataset.port.split("|"); draft.port = { ...(draft.port || {}), [k]: v }; saveDraft(); return render(); }
   if (t.dataset.tras) { draft.trasfondo = t.dataset.tras; saveDraft(); return render(); }
   if (t.dataset.step) { draft.step = +t.dataset.step; saveDraft(); return render(); }
   if (t.dataset.vstory) return writeStory(t.dataset.vstory);
   if (t.dataset.open) { view = { name: "char", id: t.dataset.open }; return render(); }
   if (t.dataset.play) { window.scrollTo({ top: 0 }); return startGame(t.dataset.play); }
   switch (t.id) {
-    case "new": draft = blankDraft(); saveDraft(); view = { name: "wizard" }; return render();
+    case "new": draft = { ...blankDraft(), port: {} }; saveDraft(); view = { name: "wizard" }; return render();
     case "resume": view = { name: "wizard" }; return render();
     case "home": if (view.name === "game") { G = null; setActive(""); } view = { name: "home" }; window.scrollTo({ top: 0 }); return render();
     case "prev": draft.step = Math.max(0, draft.step - 1); saveDraft(); return render();
