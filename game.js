@@ -246,7 +246,8 @@ function enemyTurn() {
 }
 function xpFor(e) {
   let xp = (e.boss ? 60 : 10) * e.lvl; // jefe ≈ 6 monstruos (ajustado con la nueva curva de XP)
-  if (e.lvl <= G.nivel - 5) xp *= 0.1; else if (e.lvl >= G.nivel + 5) xp *= 1.5;
+  // curva suave: −10% por nivel por debajo (mín. 25%), +10% por nivel por encima (máx. +50%)
+  const diff = e.lvl - G.nivel; xp *= diff >= 0 ? 1 + Math.min(diff, 5) * 0.1 : Math.max(0.25, 1 + diff * 0.1);
   return Math.round(xp);
 }
 function victory() {

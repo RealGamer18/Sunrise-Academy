@@ -274,7 +274,7 @@
     else if (/^Sobrecarga/.test(t)) Q.push({ k: "overload" });
     else if (curSpell && t.startsWith(curSpell.n + ":")) {
       if (/Falla y rebota/.test(t)) Q.push({ k: "backfire", aff: curSpell.aff, dice: dice(t) });
-      else Q.push({ k: "spell", kind: curSpell.kind, aff: curSpell.aff, st: curSpell.st, i: curT, dice: dice(t), eff: /súper eficaz/.test(t) ? "super" : /poco eficaz/.test(t) ? "weak" : null });
+      else Q.push({ k: "spell", n: curSpell.n, circ: curSpell.c, kind: curSpell.kind, aff: curSpell.aff, st: curSpell.st, i: curT, dice: dice(t), eff: /súper eficaz/.test(t) ? "super" : /poco eficaz/.test(t) ? "weak" : null });
     }
     else if (/^Te pones en guardia/.test(t)) Q.push({ k: "guard" });
     else if ((m = t.match(/^Usas (.+)\.$/))) Q.push({ k: "potion", item: m[1] });
@@ -422,11 +422,12 @@
   };
   // =====================================================================
   // ---------- v2: sonido (sintetizado, sin archivos) ----------
-  const SND = { on: (() => { try { return localStorage.getItem("sa-sound") !== "off"; } catch (e) { return true; } })(), ctx: null, master: null };
+  const SND = { on: (() => { try { return localStorage.getItem("sa-sound") !== "off"; } catch (e) { return true; } })(), ctx: null, master: null,
+    vol: (() => { try { const v = parseFloat(localStorage.getItem("sa-vol")); return isNaN(v) ? 1 : v; } catch (e) { return 1; } })() };
   function ac() {
     if (!SND.on) return null;
     try {
-      if (!SND.ctx) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; SND.ctx = new A(); const comp = SND.ctx.createDynamicsCompressor(); SND.master = SND.ctx.createGain(); SND.master.gain.value = 0.32; SND.master.connect(comp); comp.connect(SND.ctx.destination); }
+      if (!SND.ctx) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; SND.ctx = new A(); const comp = SND.ctx.createDynamicsCompressor(); SND.master = SND.ctx.createGain(); SND.master.gain.value = 0.32 * SND.vol; SND.master.connect(comp); comp.connect(SND.ctx.destination); }
       if (SND.ctx.state === "suspended") SND.ctx.resume();
       return SND.ctx;
     } catch (e) { return null; }
@@ -494,6 +495,14 @@
     let b = document.getElementById("sndbtn"); const lang = document.getElementById("langbtn");
     if (!b && lang && lang.parentNode) { b = document.createElement("button"); b.id = "sndbtn"; b.type = "button"; b.className = "btn small ghost"; lang.parentNode.insertBefore(b, lang); b.addEventListener("click", () => { SND.on = !SND.on; try { localStorage.setItem("sa-sound", SND.on ? "on" : "off"); } catch (e) {} if (SND.on) SFX.click(); soundButton(); }); }
     if (b) { b.textContent = SND.on ? "🔊" : "🔇"; b.title = SND.on ? L("Silenciar efectos", "Mute effects") : L("Activar sonido", "Turn sound on"); }
+    let r = document.getElementById("sndvol");
+    if (!r && b) {
+      r = document.createElement("input"); r.id = "sndvol"; r.type = "range"; r.min = "0"; r.max = "1.5"; r.step = "0.05"; r.value = String(SND.vol);
+      r.setAttribute("aria-label", L("Volumen de efectos", "Effects volume")); b.after(r);
+      r.addEventListener("input", () => { SND.vol = +r.value; try { localStorage.setItem("sa-vol", r.value); } catch (e) {} if (SND.master) SND.master.gain.value = 0.32 * SND.vol; });
+      r.addEventListener("change", () => SFX.click());
+    }
+    if (r) r.hidden = !SND.on;
   }
   // clic: sonido suave + onda
   document.addEventListener("pointerdown", (ev) => {
@@ -576,10 +585,406 @@
   DUR.ally = 460;
   window.SA_FXQ = (ev) => { if (!RM) Q.push(ev); };
   // ---------- fin v2 ----------
+
+  // ---------- v3: golpe según el arma, afinidades que faltaban, nombre del hechizo ----------
+  const W_AFF = [[/fuego|llama|brasa/i, "Fuego"], [/rayo|trueno/i, "Rayo"], [/luz|solar/i, "Luz"], [/sombra|noche/i, "Sombra"], [/escarcha|hielo|agua/i, "Agua"], [/roca|piedra|tierra/i, "Tierra"], [/vendaval|viento|aire/i, "Aire"]];
+  function weaponStyle() {
+    const n = G?.g?.arma?.n || "Puños";
+    const base = typeof ARMAS_INFO !== "undefined" ? Object.keys(ARMAS_INFO).filter((k) => n.startsWith(k)).sort((a, b) => b.length - a.length)[0] : null;
+    const tags = (base && ARMAS_INFO[base][1]) || [];
+    const aff = (W_AFF.find(([re]) => re.test(n)) || [])[1] || null;
+    const st = /arco|ballesta|honda/i.test(n) ? "arrow" : /kunai|shuriken|bumer/i.test(n) ? "star"
+      : /bast[oó]n|b[aá]culo|varita|cetro/i.test(n) ? "orb" : /pu[ñn]os|guantelete|nunchaku/i.test(n) ? "fist"
+      : /lanza|alabarda|estoque|tridente/i.test(n) ? "thrust" : /l[aá]tigo/i.test(n) ? "whip"
+      : tags.includes("pesada") || /martillo|mandoble|hacha|guada[ñn]a|maza/i.test(n) ? "heavy"
+      : /daga|katana|cimitarra/i.test(n) || tags.includes("critica") ? "quick" : "sword";
+    return { st, aff, c: aff ? col(aff) : "#fff" };
+  }
+  function shot(from, to, cls, c, ms) {
+    const s = stageEl(); if (!s || !from || !to) return; const layer = add(s, "", ms + 60); const p = center(from, s), q = center(to, s);
+    const ang = (Math.atan2(q.y - p.y, q.x - p.x) * 180) / Math.PI;
+    const o = document.createElement("i"); o.className = cls; o.style.cssText = `--c:${c};left:${p.x}px;top:${p.y}px;--a:${ang}deg`; layer.appendChild(o);
+    o.animate?.([{ translate: "0 0" }, { translate: `${q.x - p.x}px ${q.y - p.y}px` }], { duration: ms, easing: "cubic-bezier(.3,0,.9,.6)", fill: "forwards" });
+  }
+  const v2slash = RUN.slash;
+  RUN.slash = (ev) => {
+    const w = weaponStyle(); const me = meSprite(); const t = foeSprite(ev.i);
+    if (w.st === "sword") { const r = v2slash(ev); if (w.aff) setTimeout(() => impactByAff(foeSprite(ev.i), w.aff, ev.crit), 130); return r; }
+    const crit = ev.crit, c = crit ? "#ffd84a" : w.c;
+    let hitAt = 110;
+    if (!ev.second) diceShow(ev.dice);
+    if (w.st === "arrow" || w.st === "star" || w.st === "orb") {
+      klass(meSprite, "fx-recoil", 300); SFX.miss();
+      shot(me, t, w.st === "arrow" ? "fx-arrow" : w.st === "star" ? "fx-star" : "fx-orb", w.aff ? w.c : w.st === "orb" ? "#cfe6ff" : "#fff", 300); hitAt = 300;
+    } else { klass(meSprite, w.st === "heavy" ? "fx-lunge-heavy" : "fx-lunge-me", w.st === "heavy" ? 520 : 380); if (!ev.second) SFX.slash(); if (w.st === "heavy") hitAt = 260; }
+    setTimeout(() => {
+      const t = foeSprite(ev.i); if (!t) return;
+      const fx = {
+        heavy: `<i class="fx-smash" style="--c:${c}"></i><i class="fx-cut" style="--c:${c}"></i><i class="fx-shock" style="--c:${c}"></i>`,
+        quick: [-50, 20, -10].map((r, k) => `<i class="fx-slash thin" style="--r:${r}deg;--c:${c};animation-delay:${k * 0.06}s"></i>`).join(""),
+        thrust: `<i class="fx-thrust" style="--c:${c}"></i>`,
+        whip: `<i class="fx-whip" style="--c:${c}"></i>`,
+        fist: `<i class="fx-ring" style="--c:${c}"></i><i class="fx-ring" style="--c:${c};animation-delay:.08s"></i>`,
+      }[w.st] || "";
+      add(t, fx + sparks(c, crit ? 14 : 7, 50), w.st === "heavy" ? 1300 : 800); hitflash(() => foeSprite(ev.i));
+      if (w.aff) impactByAff(t, w.aff, crit);
+      if (w.st === "heavy") { shake(true); camPunch(); tone(60, 0.4, { to: 30, vol: 0.9 }); }
+      if (crit) { SFX.crit(); flash("#ffe9a0"); camPunch(); pop(t, L("¡CRÍTICO!", "CRITICAL!"), "#ffd84a", true); } else SFX.hit();
+    }, hitAt);
+    return ev.second ? 300 : hitAt + 320;
+  };
+  DUR.slash = (e) => { const s = weaponStyle().st; return e.second ? 300 : s === "heavy" ? 620 : s === "arrow" || s === "star" || s === "orb" ? 640 : e.crit ? 560 : 440; };
+
+  // Afinidades sin efecto propio: Tiempo, Espacio, Gravedad, Realidad, Creación, Destino, Alma
+  const clockSvg = (c) => `<svg viewBox="0 0 100 100"><g fill="none" stroke="${c}" stroke-width="2"><circle cx="50" cy="50" r="44"/>${Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2; return `<line x1="${50 + Math.cos(a) * 36}" y1="${50 + Math.sin(a) * 36}" x2="${50 + Math.cos(a) * 42}" y2="${50 + Math.sin(a) * 42}"/>`; }).join("")}<line class="h" x1="50" y1="50" x2="50" y2="14" stroke-width="3"/></g></svg>`;
+  const AFF_FX = {
+    Tiempo(t, c) { add(t, `<i class="fx-clock">${clockSvg(c)}</i><i class="fx-ring" style="--c:${c}"></i><i class="fx-ring" style="--c:${c};animation-delay:.15s"></i>`, 1000); klass(() => t, "fx-echo", 600); },
+    Espacio(t, c) { add(t, `<i class="fx-rift" style="--c:${c}"></i>${sparks("#fff", 10, 55)}`, 1000); },
+    Gravedad(t, c) { add(t, `<i class="fx-implode" style="--c:${c}"></i><i class="fx-implode" style="--c:${c};animation-delay:.1s"></i>`, 900); klass(() => t, "fx-crush", 600); },
+    Realidad(t, c) { let h = ""; for (let k = 0; k < 7; k++) h += `<i class="fx-shard" style="background:${k % 2 ? c : "#7ff"};--dx:${rnd(-60, 60)}px;--dy:${rnd(-60, 40)}px;transform:rotate(${rnd(0, 180)}deg)"></i>`; add(t, h, 800); klass(() => t, "fx-glitch", 520); },
+    "Creación"(t, c) { rise(t, c, ["🌿", "🍃", "🌱", "✿"], 9); add(t, `<i class="fx-ring" style="--c:${c}"></i>`, 700); },
+    Destino(t, c) { rise(t, c, ["🎲", "✦", "🂡", "✧"], 7); add(t, `<i class="fx-thread" style="--c:${c}"></i>`, 900); },
+    Alma(t, c) { rise(t, c, ["✧", "◌", "✧"], 8); add(t, `<i class="fx-bubble" style="--c:${c}"></i>`, 900); },
+  };
+  const _iba = impactByAff;
+  impactByAff = function (target, aff, crit) { try { if (target && AFF_FX[aff]) AFF_FX[aff](target, col(aff)); } catch (e) {} return _iba(target, aff, crit); };
+  const AFF_SFX = {
+    Tiempo() { [1760, 1320, 1046, 880].forEach((f, i) => tone(f, 0.12, { type: "triangle", vol: 0.12, delay: i * 0.08 })); noise(0.5, { filter: "bandpass", f: 2400, fTo: 600, q: 6, vol: 0.12 }); },
+    Espacio() { tone(180, 0.8, { type: "sine", to: 1400, vol: 0.18 }); noise(0.6, { filter: "bandpass", f: 400, fTo: 4000, q: 3, vol: 0.2 }); },
+    Gravedad() { tone(160, 0.6, { type: "sawtooth", to: 30, vol: 0.18 }); tone(45, 0.7, { vol: 0.9, delay: 0.1 }); },
+    Realidad() { for (let i = 0; i < 6; i++) tone(rnd(300, 2400), 0.05, { type: "square", vol: 0.06, delay: i * 0.04 }); noise(0.25, { filter: "highpass", f: 4000, vol: 0.2 }); },
+    "Creación"() { arp([392, 523, 659, 880], 0.06, { type: "sine", vol: 0.12, len: 0.35 }); noise(0.4, { filter: "bandpass", f: 900, q: 2, vol: 0.12 }); },
+    Destino() { [1046, 1318, 1568].forEach((f, i) => tone(f, 0.9, { type: "triangle", vol: 0.1, delay: i * 0.03 })); tone(98, 0.6, { vol: 0.4 }); },
+    Alma() { tone(660, 1, { type: "sine", to: 990, vol: 0.12 }); tone(664, 1, { type: "sine", to: 996, vol: 0.1 }); noise(0.8, { filter: "bandpass", f: 1800, q: 8, vol: 0.06 }); },
+  };
+  const _impSfx = SFX.impact;
+  SFX.impact = (aff) => (AFF_SFX[aff] ? AFF_SFX[aff]() : _impSfx(aff));
+
+  // Nombre del hechizo (cartel JRPG)
+  const v2spell = RUN.spell;
+  RUN.spell = (ev) => {
+    const c = col(ev.aff), ult = ev.circ >= 3 && !["heal", "shield", "buff"].includes(ev.kind);
+    if (ev.n) add(stageEl(), `<div class="fx-skill ${ult ? "ult" : ""}" style="--c:${c}"><b>${esc(ev.n)}</b></div>`, ult ? 1800 : 1300);
+    if (!ult) return v2spell(ev);
+    // Hechizo mayor: oscurece, círculo gigante bajo el objetivo y golpe con cámara
+    const s = stageEl(); add(s, `<i class="fx-darken"></i>`, 1500); klass(stageEl, "fx-cam-in", 1000);
+    const t = foeSprite(ev.i); if (t) add(t, `<i class="fx-bigcircle" style="--c:${c}">${clockSvg(c).replace('class="h"', "")}</i>`, 1500);
+    SFX.charge(); setTimeout(() => SFX.charge(), 180);
+    setTimeout(() => v2spell(ev), 420);
+    setTimeout(() => { const t = foeSprite(ev.i); flash(c); shake(true); camPunch(); edge(c); if (t) { add(t, `<i class="fx-pillar" style="--c:${c}"></i>${sparks(c, 18, 90)}`, 1000); impactByAff(t, ev.aff, true); } }, 420 + 420);
+    return 1500;
+  };
+  DUR.spell = (e) => (["heal", "shield", "buff"].includes(e.kind) ? 650 : e.circ >= 3 ? 1550 : 1080);
+
+  // Victoria: rótulo con rayos de amanecer + recompensas que cuentan
+  function victoryBurst() {
+    if (RM) return; const v = document.createElement("div"); v.className = "fx-victory";
+    v.innerHTML = `<i class="rays"></i><b>${L("¡VICTORIA!", "VICTORY!")}</b>`; document.body.appendChild(v); setTimeout(() => v.remove(), 2200);
+  }
+  function countUp(el) {
+    if (RM || !el) return;
+    el.querySelectorAll(".bres-lines div").forEach((d, k) => {
+      const w = document.createTreeWalker(d, NodeFilter.SHOW_TEXT); const nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
+      nodes.forEach((n) => { const parts = n.textContent.split(/(\d+)/); if (parts.length < 2) return;
+        const span = document.createElement("span"); span.innerHTML = parts.map((p, i) => (i % 2 ? `<b class="fx-cnt" data-to="${p}">0</b>` : esc(p))).join(""); n.replaceWith(span); });
+      d.style.animationDelay = `${0.5 + k * 0.12}s`; d.classList.add("fx-resline");
+      d.querySelectorAll(".fx-cnt").forEach((b) => { const to = +b.dataset.to, t0 = performance.now() + 500 + k * 120; const step = (now) => { const p = Math.min(1, Math.max(0, (now - t0) / 700)); b.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); });
+    });
+  }
+  // Subida de nivel: rayos de amanecer + lo que ganas (lo anota tactica.js en window.SA_LVL)
+  function levelUpFx(n) {
+    SFX.level(); if (RM) return bigMsg(L("¡NIVEL ", "LEVEL ") + n + "!", G?.nombre || "", "#8be0a8");
+    const g = window.SA_LVL && window.SA_LVL.to === n ? window.SA_LVL : null;
+    const gains = g ? [g.pv && `❤️ +${g.pv} ${L("PV máx.", "max HP")}`, g.mana && `💧 +${g.mana} ${L("maná máx.", "max mana")}`, g.pa && `✦ +${g.pa} ${L("punto de afinidad", "affinity point")}${g.pa > 1 ? "s" : ""}`, g.pat && `⬆ +${g.pat} ${L("punto de atributo", "attribute point")}${g.pat > 1 ? "s" : ""}`].filter(Boolean) : [];
+    const v = document.createElement("div"); v.className = "fx-victory fx-levelup";
+    v.innerHTML = `<i class="rays"></i><div class="lu"><small>${L("¡SUBES DE NIVEL!", "LEVEL UP!")}</small><b>${n}</b>${gains.length ? `<ul>${gains.map((x, i) => `<li style="animation-delay:${0.5 + i * 0.15}s">${esc(x)}</li>`).join("")}</ul>` : ""}</div>`;
+    document.body.appendChild(v); setTimeout(() => v.remove(), 3400);
+  }
+  window.SA_FX3 = { victoryBurst, countUp, levelUpFx };
+
+  // Eventos de tactica.js: guardia, maleficio, golpe brutal, racha y Amanecer
+  RUN.foeguard = (ev) => { const t = foeSprite(ev.i); add(t, `<i class="fx-bubble" style="--c:#7fc8ff"></i>`, 900); pop(t, "🛡️", "#7fc8ff", true); SFX.shield(); return 450; };
+  RUN.hex = (ev) => {
+    const t = foeSprite(ev.i); add(t, `<i class="fx-swirl" style="--c:#c58cff"></i>`, 800); SFX.status();
+    if (t && meSprite()) projectile(t, meSprite(), "#c58cff", 380);
+    setTimeout(() => { add(meSprite(), `<i class="fx-swirl" style="--c:#c58cff"></i><i class="fx-ring" style="--c:#c58cff"></i>`, 800); }, 380); return 650;
+  };
+  RUN.heavy = (ev) => { klass(() => foeSprite(ev.i), "fx-windup", 420); add(foeSprite(ev.i), `<i class="fx-core" style="--c:#ff5a4a"></i>`, 500); pop(foeSprite(ev.i), "💥", "#ff5a4a", true); tone(80, 0.5, { type: "sawtooth", to: 160, vol: 0.12 }); return 380; };
+  RUN.combo = (ev) => { pop(foeSprite(ev.i), `${L("Racha", "Streak")} ×${(1 + Math.min(ev.n - 1, 5) * 0.1).toFixed(1)}`, "#ffb35a", ev.n >= 4); tone(600 + ev.n * 80, 0.12, { type: "triangle", vol: 0.12 }); return 300; };
+  RUN.alba = () => {
+    const s = stageEl(); if (!s) return 300;
+    add(s, `<div class="fx-alba"><i class="sky"></i><i class="sun"></i><i class="rays"></i></div><div class="fx-skill ult" style="--c:#ffcf6a"><b>${L("AMANECER", "DAWNBREAK")}</b></div>`, 2300);
+    [523, 659, 784, 1046].forEach((f, i) => tone(f, 1.4, { type: "triangle", vol: 0.12, delay: 0.25 + i * 0.09 })); tone(55, 1.6, { vol: 0.8, delay: 0.9 });
+    setTimeout(() => {
+      flash("#fff3cf"); shake(true); camPunch(); edge("#ffcf6a"); noise(0.9, { f: 4000, fTo: 200, vol: 0.5 });
+      document.querySelectorAll(".foes2 .foe2:not(.dead) .sprite").forEach((t, i) => setTimeout(() => { add(t, `<i class="fx-pillar" style="--c:#ffcf6a"></i>${sparks("#ffe9a0", 16, 90)}`, 1000); hitflash(() => t); }, i * 120));
+    }, 950);
+    return 2100;
+  };
+  Object.assign(DUR, { foeguard: 460, hex: 680, heavy: 400, combo: 320, alba: 2150 });
+  const v3css = document.createElement("style"); v3css.id = "fx-v3"; v3css.textContent = `
+.fx-skill{position:absolute;left:50%;top:10px;translate:-50% 0;z-index:8;padding:6px 26px;font-family:var(--display);font-size:15px;letter-spacing:.08em;color:#fff;white-space:nowrap;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--c) 45%,#120a24) 18%,color-mix(in srgb,var(--c) 45%,#120a24) 82%,transparent);border-block:1px solid color-mix(in srgb,var(--c) 70%,#fff);text-shadow:0 0 10px var(--c),0 1px 2px #000;animation:fxSkill 1.25s cubic-bezier(.2,.9,.2,1) forwards}
+.fx-skill b::before,.fx-skill b::after{content:"✦";margin:0 10px;color:var(--c)}
+@keyframes fxSkill{0%{opacity:0;clip-path:inset(0 50%)}15%{opacity:1;clip-path:inset(0 0)}80%{opacity:1}100%{opacity:0;translate:-50% -8px}}
+.fx-skill.ult{top:22%;font-size:24px;padding:10px 46px;letter-spacing:.14em;border-block-width:2px;animation-duration:1.75s}
+.fx-skill.ult::before{content:"";position:absolute;inset:-30px 20%;background:radial-gradient(ellipse,color-mix(in srgb,var(--c) 40%,transparent),transparent 70%);z-index:-1}
+.fx-bigcircle{position:absolute;left:50%;top:50%;width:260px;height:260px;margin:-130px;z-index:3;filter:drop-shadow(0 0 10px var(--c)) drop-shadow(0 0 26px var(--c));animation:fxBigCircle 1.5s cubic-bezier(.2,.9,.2,1) forwards}
+.fx-bigcircle svg{width:100%;height:100%}
+@keyframes fxBigCircle{0%{scale:0;rotate:-90deg;opacity:0}25%{scale:1;opacity:1}75%{rotate:60deg;opacity:1}100%{rotate:90deg;scale:1.3;opacity:0}}
+.fx-pillar{position:absolute;left:50%;bottom:-20%;width:90px;height:600px;margin-left:-45px;z-index:6;mix-blend-mode:screen;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--c) 70%,transparent) 30%,#fff 50%,color-mix(in srgb,var(--c) 70%,transparent) 70%,transparent);animation:fxPillar .9s ease-out forwards}
+@keyframes fxPillar{0%{scale:.1 0;transform-origin:bottom;opacity:1}25%{scale:1.2 1}100%{scale:2.2 1;opacity:0}}
+.fx-victory{position:fixed;inset:0;z-index:90;display:grid;place-items:center;pointer-events:none;animation:fxVicOut 2.2s ease forwards}
+.fx-victory .rays{position:absolute;left:50%;top:50%;width:150vmax;height:150vmax;margin:-75vmax;
+  background:repeating-conic-gradient(from 0deg,#ffd38a33 0deg 6deg,transparent 6deg 18deg);-webkit-mask-image:radial-gradient(circle,#000 0,transparent 55%);mask-image:radial-gradient(circle,#000 0,transparent 55%);animation:fxSpin 12s linear infinite}
+.fx-victory b{position:relative;font-family:"Cinzel Decorative",var(--display);font-size:clamp(42px,9vw,96px);letter-spacing:.06em;
+  background:linear-gradient(180deg,#fff8e0,#ffcf6a 50%,#e8843f);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #3a1a3a) drop-shadow(0 0 30px #ffb85a);animation:fxVicIn .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes fxVicIn{from{scale:2.4;opacity:0;letter-spacing:.5em}to{scale:1;opacity:1}}
+@keyframes fxVicOut{0%,75%{opacity:1}100%{opacity:0}}
+.fx-alba{position:absolute;inset:0;overflow:hidden;z-index:2;pointer-events:none}
+.fx-alba .sky{position:absolute;inset:0;background:linear-gradient(0deg,#ffcf6a 0%,#e8843f 25%,#7a3a5a 60%,transparent 100%);mix-blend-mode:screen;animation:fxAlbaSky 2.2s ease forwards}
+.fx-alba .sun{position:absolute;left:50%;bottom:-30%;width:46%;aspect-ratio:1;translate:-50% 0;border-radius:50%;background:radial-gradient(circle,#fffbe8 0 30%,#ffd77e 45%,#ff9a5a00 70%);animation:fxAlbaSun 2.2s cubic-bezier(.2,.8,.2,1) forwards}
+.fx-alba .rays{position:absolute;left:50%;top:60%;width:220%;aspect-ratio:1;translate:-50% -50%;background:repeating-conic-gradient(#fff3cf55 0 5deg,transparent 5deg 15deg);-webkit-mask-image:radial-gradient(circle,#000,transparent 60%);mask-image:radial-gradient(circle,#000,transparent 60%);animation:fxAlbaRays 2.2s ease forwards}
+@keyframes fxAlbaSky{0%{opacity:0}35%{opacity:.85}80%{opacity:.6}100%{opacity:0}}
+@keyframes fxAlbaSun{0%{translate:-50% 40%;opacity:0}45%{translate:-50% -35%;opacity:1}85%{opacity:1}100%{translate:-50% -40%;opacity:0}}
+@keyframes fxAlbaRays{0%{opacity:0;rotate:0deg}40%{opacity:1}100%{opacity:0;rotate:40deg}}
+#sndvol{width:84px;min-width:0;padding:0;margin:0 4px;accent-color:#ffcf6a;background:transparent;border:0;vertical-align:middle}
+@media (max-width:560px){#sndvol{width:60px}}
+.fx-levelup{animation-duration:3.4s}
+.fx-levelup::before,.fx-victory::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 50% 45% at 50% 50%,#0a0614d9 0,#0a061499 45%,transparent 75%)}
+.fx-levelup .rays{background:repeating-conic-gradient(from 0deg,#b6f5c855 0deg 6deg,transparent 6deg 18deg)}
+.fx-levelup .lu{position:relative;text-align:center;animation:fxVicIn .6s cubic-bezier(.2,1.6,.4,1) both}
+.fx-levelup small{display:block;font-family:var(--display);letter-spacing:.3em;font-size:clamp(14px,2.4vw,20px);color:#d8ffe4;text-shadow:0 0 12px #8be0a8,0 2px 2px #000}
+.fx-levelup b{display:block;font-family:"Cinzel Decorative",var(--display);font-size:clamp(70px,14vw,150px);line-height:1;background:linear-gradient(180deg,#fff,#b6f5c8 45%,#3fae6a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #0b3a22) drop-shadow(0 0 30px #8be0a8)}
+.fx-levelup ul{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:4px}
+.fx-levelup li{font-family:var(--display);font-size:clamp(14px,2vw,18px);color:#fff;text-shadow:0 0 10px #8be0a8,0 2px 2px #000;animation:fxResLine .45s cubic-bezier(.2,.9,.3,1) both}
+.float{background:linear-gradient(180deg,#fff 20%,#ff8b7a 80%);-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-stroke:0!important;filter:drop-shadow(0 2px 0 #000) drop-shadow(0 0 2px #000)}
+.float.heal{background-image:linear-gradient(180deg,#fff 20%,#8be0a8 80%)}
+.float.crit{font-size:40px!important;background-image:linear-gradient(180deg,#fffbe0 10%,#ffd84a 55%,#ff8a2a)}
+.float.eff{font-size:32px!important;background-image:linear-gradient(180deg,#fff 10%,#ffb35a 70%)}
+.fx-resline{animation:fxResLine .45s cubic-bezier(.2,.9,.3,1) both}@keyframes fxResLine{from{opacity:0;translate:-24px 0}}
+.fx-cnt{color:#ffd38a;font-family:var(--display)}
+.fx-slash.thin{height:5px;background:linear-gradient(90deg,transparent,var(--c) 30%,#fff 50%,var(--c) 70%,transparent);box-shadow:0 0 10px var(--c),0 0 24px var(--c);transform:rotate(var(--r)) scaleX(0)}
+.fx-arrow{width:70px!important;height:5px!important;margin:-2px 0 0 -35px!important;background:linear-gradient(90deg,transparent,var(--c) 60%,#fff)!important;filter:drop-shadow(0 0 6px var(--c)) drop-shadow(0 0 14px var(--c))!important}
+.fx-arrow::after{right:-8px!important;top:-6px!important;border-width:8px 0 8px 14px!important;border-style:solid!important;border-color:transparent transparent transparent #fff!important}
+.fx-star{width:30px!important;height:30px!important;margin:-15px!important;filter:drop-shadow(0 0 8px var(--c)) drop-shadow(0 0 18px var(--c)) brightness(1.3)!important}
+.fx-thrust{height:10px!important;margin-top:-5px!important;filter:drop-shadow(0 0 10px var(--c)) brightness(1.3)!important}
+.fx-whip{border-width:7px!important;filter:drop-shadow(0 0 10px var(--c)) drop-shadow(0 0 22px var(--c)) brightness(1.3)!important}
+.fx-smash{position:absolute;left:50%;top:-30%;width:190%;height:160%;margin-left:-95%;border-radius:50%;border-top:16px solid var(--c);z-index:6;
+  -webkit-mask-image:linear-gradient(90deg,transparent 4%,#000 30%,#000 70%,transparent 96%);mask-image:linear-gradient(90deg,transparent 4%,#000 30%,#000 70%,transparent 96%);
+  filter:drop-shadow(0 0 8px var(--c)) drop-shadow(0 0 22px var(--c)) brightness(1.25);animation:fxSmash .75s cubic-bezier(.15,.9,.25,1) forwards}
+.fx-smash::before{content:"";position:absolute;inset:3px 6%;border-radius:50%;border-top:5px solid #fff}
+.fx-smash::after{content:"";position:absolute;inset:-6px;border-radius:50%;border-top:10px solid var(--c);opacity:.45;rotate:-14deg}
+@keyframes fxSmash{0%{rotate:-95deg;opacity:0}12%{opacity:1}45%{rotate:18deg;opacity:1}100%{rotate:24deg;opacity:0}}
+.fx-cut{position:absolute;left:8%;right:8%;top:46%;height:16px;border-radius:50%;rotate:-28deg;z-index:6;
+  background:radial-gradient(ellipse at center,#fff 0 18%,var(--c) 40%,transparent 72%);box-shadow:0 0 18px var(--c),0 0 40px var(--c);animation:fxCut .9s .3s ease-out both}
+@keyframes fxCut{0%{scale:0 .3;opacity:0}20%{scale:1.1 1;opacity:1}60%{opacity:.85}100%{scale:1 .2;opacity:0}}
+.fx-thrust{position:absolute;left:-30%;top:50%;width:160%;height:5px;margin-top:-2px;background:linear-gradient(90deg,transparent,var(--c) 70%,#fff);clip-path:polygon(0 30%,92% 0,100% 50%,92% 100%,0 70%);box-shadow:0 0 14px var(--c);animation:fxThrust .3s ease-out forwards;z-index:5}
+@keyframes fxThrust{from{transform:scaleX(0);transform-origin:left}60%{transform:scaleX(1)}to{transform:scaleX(1);opacity:0}}
+.fx-whip{position:absolute;inset:10% -10%;border-radius:50%;border:3px solid transparent;border-bottom-color:var(--c);filter:drop-shadow(0 0 8px var(--c));animation:fxWhip .4s ease-out forwards;z-index:5}
+@keyframes fxWhip{from{rotate:-120deg;opacity:0;scale:.6}40%{opacity:1}to{rotate:40deg;opacity:0;scale:1.1}}
+.fx-arrow{position:absolute;width:44px;height:3px;margin:-1px 0 0 -22px;rotate:var(--a);background:linear-gradient(90deg,transparent,var(--c));z-index:5}
+.fx-arrow::after{content:"";position:absolute;right:-4px;top:-4px;border:5px solid transparent;border-left:9px solid var(--c)}
+.fx-star{position:absolute;width:18px;height:18px;margin:-9px;background:var(--c);clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);filter:drop-shadow(0 0 6px var(--c));animation:fxSpin .2s linear infinite;z-index:5}
+.fx-recoil{animation:fxRecoil .3s ease-out}@keyframes fxRecoil{40%{translate:-10px 0}}
+.fx-lunge-heavy{animation:fxLungeHeavy .52s cubic-bezier(.5,0,.3,1)}@keyframes fxLungeHeavy{30%{translate:-14px 4px;rotate:-6deg}60%{translate:34px -6px;rotate:4deg}}
+.fx-clock{position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px;opacity:.9;filter:drop-shadow(0 0 8px #8fe0cf);animation:fxFade 1s ease-out forwards;z-index:5}
+.fx-clock svg{width:100%;height:100%}.fx-clock .h{transform-origin:50px 50px;animation:fxRewind .9s cubic-bezier(.3,0,.2,1) forwards}
+@keyframes fxRewind{to{rotate:-540deg}}@keyframes fxFade{0%{opacity:0;scale:.6}20%{opacity:.9;scale:1}100%{opacity:0;scale:1.1}}
+.fx-echo{animation:fxEcho .6s steps(3)}@keyframes fxEcho{0%,100%{filter:none}33%{filter:drop-shadow(-12px 0 0 #8fe0cf88) drop-shadow(12px 0 0 #8fe0cf55)}66%{filter:drop-shadow(-6px 0 0 #8fe0cf88)}}
+.fx-rift{position:absolute;left:50%;top:50%;width:120px;height:30px;margin:-15px 0 0 -60px;border-radius:50%;background:radial-gradient(ellipse,#05001a 30%,var(--c) 60%,transparent 72%);box-shadow:0 0 24px var(--c);animation:fxRift .95s cubic-bezier(.2,.9,.3,1) forwards;z-index:5}
+@keyframes fxRift{0%{scale:0 .2}30%{scale:1 2.6}70%{scale:1 2.4;opacity:1}100%{scale:0 .1;opacity:0}}
+.fx-implode{position:absolute;left:50%;top:50%;width:180px;height:180px;margin:-90px;border-radius:50%;border:4px solid var(--c);box-shadow:inset 0 0 30px var(--c),0 0 20px var(--c);animation:fxImplode .55s ease-in forwards;z-index:5}
+@keyframes fxImplode{from{scale:1;opacity:0}30%{opacity:1}to{scale:.05;opacity:0}}
+.fx-crush{animation:fxCrush .6s cubic-bezier(.3,1.6,.5,1)}@keyframes fxCrush{25%{scale:1.15 .7;translate:0 10px}}
+.fx-glitch{animation:fxGlitch .52s steps(2)}@keyframes fxGlitch{0%,100%{filter:none;clip-path:none}20%{filter:drop-shadow(-5px 0 #f0f) drop-shadow(5px 0 #0ff);clip-path:inset(10% 0 40% 0);translate:6px 0}40%{clip-path:inset(50% 0 5% 0);translate:-8px 0}60%{filter:drop-shadow(4px 0 #f0f) drop-shadow(-4px 0 #0ff);clip-path:inset(0 0 70% 0);translate:3px 0}}
+.fx-thread{position:absolute;left:-40%;right:-40%;top:50%;height:2px;background:linear-gradient(90deg,transparent,var(--c),#fff,var(--c),transparent);box-shadow:0 0 10px var(--c);animation:fxThread .9s ease-out forwards;z-index:5}
+@keyframes fxThread{0%{scale:0 1;rotate:-12deg}40%{scale:1 1}80%{opacity:1}100%{opacity:0;scale:1.1 6}}
+@media (prefers-reduced-motion:reduce){.fx-skill,.fx-smash,.fx-thrust,.fx-whip,.fx-clock,.fx-rift,.fx-implode,.fx-thread{animation-duration:.01s}}`;
+  document.head.appendChild(v3css);
+  // ---------- fin v3 ----------
+
+  // ---------- v4: animación y sonido por categoría (curar, escudo, mejora, estados, armas) y afinidad ----------
+  const TIMBRE = { Fuego: ["sawtooth", 220], Agua: ["sine", 392], Tierra: ["triangle", 110], Aire: ["sine", 523], Rayo: ["square", 330], Luz: ["triangle", 659], Sombra: ["sawtooth", 147], Tiempo: ["triangle", 440], Espacio: ["sine", 262], Gravedad: ["sawtooth", 82], Realidad: ["square", 494], "Creación": ["sine", 349], Destino: ["triangle", 587], Alma: ["sine", 415] };
+  const tb = (aff) => TIMBRE[aff] || ["triangle", 392];
+  const CAT_SFX = {
+    heal(aff) { const [ty, f] = tb(aff); [1, 1.25, 1.5, 2].forEach((m, i) => tone(f * m, 0.45, { type: ty, vol: ty === "sine" ? 0.16 : 0.08, delay: i * 0.08 })); tone(f * 4, 0.8, { type: "sine", vol: 0.05, delay: 0.3 }); },
+    shield(aff) { const [ty, f] = tb(aff); tone(f * 2, 0.8, { type: ty, vol: 0.08 }); tone(f * 3, 0.7, { type: "sine", vol: 0.08, delay: 0.03 }); noise(0.15, { filter: "bandpass", f: f * 6, q: 12, vol: 0.25 }); },
+    buff(aff) { const [ty, f] = tb(aff); tone(f, 0.5, { type: ty, to: f * 4, vol: 0.08 }); [2, 2.5, 3].forEach((m, i) => tone(f * m, 0.2, { type: "sine", vol: 0.1, delay: 0.25 + i * 0.05 })); },
+    status(aff) { const [ty, f] = tb(aff); tone(f, 0.6, { type: ty, vol: 0.08 }); tone(f * 1.06, 0.6, { type: ty, vol: 0.08 }); tone(f / 2, 0.6, { type: "sine", to: f / 3, vol: 0.15 }); },
+  };
+  const ST_SFX = {
+    Cegado() { tone(2400, 0.5, { type: "sine", to: 3200, vol: 0.1 }); noise(0.35, { filter: "highpass", f: 6000, vol: 0.35 }); },
+    Quemado() { for (let i = 0; i < 7; i++) noise(0.05, { filter: "highpass", f: rnd(2500, 6000), vol: rnd(0.15, 0.35), delay: i * rnd(0.04, 0.09) }); noise(0.6, { f: 900, fTo: 300, vol: 0.15 }); },
+    Aturdido() { tone(500, 0.35, { type: "triangle", to: 180, vol: 0.18 }); arp([1800, 2200, 1900, 2400], 0.08, { type: "sine", vol: 0.06, len: 0.08, delay: 0.25 }); },
+    Asustado() { tone(110, 1, { type: "sawtooth", vol: 0.07 }); tone(156, 1, { type: "sawtooth", vol: 0.07 }); noise(0.9, { filter: "bandpass", f: 1200, fTo: 600, q: 6, vol: 0.1 }); },
+  };
+  const ST_FX = {
+    Cegado(h) { add(h, `<i class="fx-core" style="--c:#ffffff"></i><i class="fx-ring" style="--c:#fff8d0"></i>${sparks("#ffffff", 10, 60)}`, 800); klass(() => h, "fx-blinded", 900); },
+    Quemado(h) { rise(h, "#ff7a2e", ["🔥", "🔥", "✦"], 8); klass(() => h, "fx-burning", 1000); },
+    Aturdido(h) { add(h, `<div class="fx-orbit">${["⭐", "💫", "⭐"].map((s, i) => `<i style="--k:${i}">${s}</i>`).join("")}</div>`, 1200); klass(() => h, "fx-dizzy", 900); },
+    Asustado(h) { add(h, `<i class="fx-smoke" style="--c:#4a1a6a;--dx:-30px;--dy:-10px"></i><i class="fx-smoke" style="--c:#4a1a6a;--dx:30px;--dy:-20px"></i><em class="fx-pop big" style="--c:#c58cff">👁️</em>`, 1100); klass(() => h, "fx-scared", 1000); },
+  };
+  RUN.status = (ev) => {
+    const h = who(ev); const cap = ev.st[0].toUpperCase() + ev.st.slice(1);
+    (ST_FX[cap] || (() => {}))(h); (ST_SFX[cap] || SFX.status)();
+    pop(h, L(cap, { Quemado: "Burned", Aturdido: "Stunned", Cegado: "Blinded", Asustado: "Scared" }[cap] || cap), ST_COL[cap] || "#b98cf0");
+    return 700;
+  };
+  DUR.status = 720;
+  RUN.burn = (ev) => { const h = who(ev); rise(h, "#ff7a2e", ["🔥"], 5); klass(() => h, "fx-burning", 600); pop(h, "🔥 −5", "#ff7a2e"); ST_SFX.Quemado(); return 450; };
+  RUN.stun = (ev) => { const h = who(ev); ST_FX.Aturdido(h); ST_SFX.Aturdido(); return 600; };
+  DUR.burn = 460; DUR.stun = 620;
+
+  // Curar / escudo / mejora según afinidad
+  const HEAL_CH = { Agua: ["💧", "✚"], Luz: ["✦", "✚"], "Creación": ["🌿", "✿", "✚"], Realidad: ["▣", "✚"], Destino: ["🍀", "✦"], Alma: ["✧", "✚"] };
+  const BUFF_CH = { Aire: ["🍃", "➶"], Rayo: ["⚡", "✦"], Tiempo: ["⏳", "»"], Destino: ["🎲", "✦"], Alma: ["✧", "◌"] };
+  const v3spell = RUN.spell;
+  RUN.spell = (ev) => {
+    if (!["heal", "shield", "buff"].includes(ev.kind)) return v3spell(ev);
+    const c = col(ev.aff); const me = meSprite(); const s = stageEl();
+    if (ev.n) add(s, `<div class="fx-skill" style="--c:${c}"><b>${esc(ev.n)}</b></div>`, 1300);
+    diceShow(ev.dice); magicCircle(me, c, 1000); CAT_SFX[ev.kind](ev.aff);
+    if (ev.kind === "heal") {
+      rise(me, ev.aff === "Agua" ? "#7fd0ff" : "#8be0a8", HEAL_CH[ev.aff] || ["+", "✚"], 9);
+      if (ev.aff === "Luz" && s && me) add(s, `<i class="fx-beam" style="--c:#fff2a8;left:${center(me, s).x}px;height:${center(me, s).y + 30}px"></i>`, 800);
+      if (ev.aff === "Agua") add(me, [0, 0.12, 0.24].map((d) => `<i class="fx-ring" style="--c:#7fd0ff;animation-delay:${d}s"></i>`).join(""), 900);
+      if (ev.aff === "Realidad") klass(meSprite, "fx-glitch", 520);
+      if (ev.aff === "Tiempo") add(me, `<i class="fx-clock">${clockSvg("#8fe0cf")}</i>`, 1000);
+      klass(meSprite, "fx-healglow", 900);
+    } else if (ev.kind === "shield") {
+      const shape = { Tierra: "hex", Fuego: "flame", Sombra: "veil", Espacio: "blink", "Creación": "leaf" }[ev.aff] || "bubble";
+      if (shape === "hex") add(me, `<i class="fx-hexwall" style="--c:#c79a55"></i>`, 1100);
+      else if (shape === "flame") { add(me, `<i class="fx-bubble" style="--c:#ff7a2e"></i>`, 1000); rise(me, "#ff7a2e", ["🔥"], 8, true); }
+      else if (shape === "veil") add(me, `<i class="fx-veil"></i>`, 1100);
+      else if (shape === "blink") { klass(meSprite, "fx-blink", 700); add(me, `<i class="fx-swirl" style="--c:${c}"></i>`, 800); }
+      else if (shape === "leaf") { add(me, `<i class="fx-bubble" style="--c:#9be07a"></i>`, 1000); rise(me, "#9be07a", ["🍃", "🌿"], 7); }
+      else add(me, `<i class="fx-bubble" style="--c:${c}"></i>${sparks(c, 8, 50)}`, 1000);
+    } else {
+      klass(meSprite, "fx-aura", 1000); me?.style.setProperty("--c", c);
+      rise(me, c, BUFF_CH[ev.aff] || ["⬆", "✦"], 8);
+      if (["Aire", "Rayo", "Tiempo"].includes(ev.aff)) add(me, `<i class="fx-speed" style="--c:${c}"></i>`, 800);
+    }
+    return 750;
+  };
+  const v3dur = DUR.spell; DUR.spell = (e) => (["heal", "shield", "buff"].includes(e.kind) ? 780 : v3dur(e));
+
+  // Sonido propio por tipo de arma (se suma al golpe de v3)
+  const WSFX = {
+    arrow() { tone(190, 0.18, { type: "triangle", to: 90, vol: 0.3 }); noise(0.25, { filter: "bandpass", f: 2200, fTo: 4000, q: 3, vol: 0.2, delay: 0.05 }); },
+    star() { for (let i = 0; i < 5; i++) tone(900 + i * 60, 0.05, { type: "square", vol: 0.04, delay: i * 0.05 }); },
+    orb() { tone(300, 0.35, { type: "sine", to: 620, vol: 0.18 }); tone(303, 0.35, { type: "sine", to: 625, vol: 0.12 }); },
+    heavy() { noise(0.5, { f: 600, fTo: 120, vol: 0.5 }); },
+    quick() { [0, 0.07, 0.14].forEach((d) => noise(0.08, { filter: "bandpass", f: 4200, q: 2, vol: 0.3, delay: d })); },
+    thrust() { noise(0.1, { filter: "highpass", f: 3000, vol: 0.35 }); tone(400, 0.15, { to: 120, vol: 0.2 }); },
+    whip() { noise(0.04, { filter: "highpass", f: 5000, vol: 0.7, delay: 0.12 }); tone(2000, 0.12, { to: 300, type: "triangle", vol: 0.1, delay: 0.12 }); },
+    fist() { tone(90, 0.12, { vol: 0.7 }); tone(80, 0.12, { vol: 0.6, delay: 0.1 }); },
+    sword() {},
+  };
+  const v3slash = RUN.slash;
+  RUN.slash = (ev) => { try { if (!ev.second) WSFX[weaponStyle().st]?.(); } catch (e) {} return v3slash(ev); };
+
+  // Golpes enemigos teñidos por su afinidad
+  const v3ehit = RUN.enemyhit;
+  RUN.enemyhit = (ev) => {
+    const r = v3ehit(ev); const aff = G?.g?.combat?.enemies?.[ev.i]?.aff;
+    if (aff) setTimeout(() => { const me = meSprite(); if (!me) return; add(me, sparks(col(aff), 8, 45) + `<i class="fx-ring" style="--c:${col(aff)}"></i>`, 700); try { const v = SND.master?.gain; if (v) { const g0 = v.value; v.value = g0 * 0.5; SFX.impact(aff); setTimeout(() => (v.value = g0), 50); } } catch (e) {} }, 400);
+    return r;
+  };
+
+  // Pociones: sonido según tipo
+  RUN.potion = (ev) => {
+    const kind = (typeof SHOP !== "undefined" && SHOP.find((s) => s.n === ev.item)?.kind) || "potion";
+    const r = base.potion(ev);
+    if (kind === "mana") arp([1046, 1318, 1568, 2093], 0.05, { type: "sine", vol: 0.1, len: 0.3 });
+    else if (kind === "energy") { tone(200, 0.3, { type: "square", to: 1200, vol: 0.06 }); noise(0.12, { filter: "highpass", f: 4000, vol: 0.2, delay: 0.25 }); }
+    else { for (let i = 0; i < 6; i++) tone(rnd(220, 480), 0.09, { vol: 0.14, delay: i * 0.07, to: rnd(500, 800) }); }
+    return r;
+  };
+  // Ataques enemigos según el tipo de criatura (bestias.js)
+  const foeType = (i) => { try { const e = G.g.combat.enemies[i]; return window.SA_BESTIAS?.typeOf(String(e.n).replace(/^✦\s*/, "")) || "beast"; } catch (e) { return "beast"; } };
+  const TYPE_SFX = {
+    beast() { tone(90, 0.4, { type: "sawtooth", to: 70, vol: 0.12 }); tone(93, 0.4, { type: "sawtooth", to: 72, vol: 0.1 }); },
+    fly() { tone(2200, 0.25, { type: "square", to: 900, vol: 0.05 }); noise(0.3, { filter: "bandpass", f: 1800, fTo: 600, q: 3, vol: 0.25 }); },
+    float() { tone(520, 0.9, { type: "sine", to: 300, vol: 0.12 }); tone(530, 0.9, { type: "sine", to: 306, vol: 0.1 }); },
+    golem() { tone(45, 0.6, { vol: 1 }); noise(0.5, { f: 260, vol: 0.6 }); },
+    hop() { tone(300, 0.2, { type: "triangle", to: 90, vol: 0.25 }); tone(140, 0.25, { type: "sine", to: 400, vol: 0.12, delay: 0.12 }); },
+    crawl() { noise(0.45, { filter: "bandpass", f: 5200, q: 4, vol: 0.2 }); tone(160, 0.1, { vol: 0.4, delay: 0.3 }); },
+    caster() { tone(400, 0.4, { type: "triangle", to: 900, vol: 0.1 }); noise(0.3, { filter: "bandpass", f: 1500, fTo: 500, q: 2, vol: 0.2, delay: 0.25 }); },
+    dragon() { noise(0.9, { f: 1800, fTo: 200, vol: 0.55 }); tone(70, 0.9, { type: "sawtooth", to: 45, vol: 0.18 }); },
+  };
+  const TYPE_FX = {
+    fly(me, c) { add(me, `<i class="fx-whip" style="--c:#dff6ff"></i><i class="fx-whip" style="--c:${c};animation-delay:.08s"></i>`, 700); },
+    float(me) { add(me, [0, 1, 2].map((k) => `<i class="fx-smoke" style="--c:#8a7ac8;--dx:${rnd(-35, 35)}px;--dy:${rnd(-30, 5)}px;animation-delay:${k * 0.06}s"></i>`).join(""), 1000); },
+    golem(me) { add(me, `<i class="fx-shock" style="--c:#c79a55"></i>${Array.from({ length: 6 }, (_, k) => `<i class="fx-rock" style="left:${rnd(15, 80)}%;--fall:${rnd(70, 100)}px;animation-delay:${k * 0.05}s"></i>`).join("")}`, 900); shake(true); },
+    hop(me) { add(me, `<i class="fx-ring" style="--c:#8be07a"></i>`, 700); klass(meSprite, "fx-crush", 600); },
+    crawl(me) { add(me, `<i class="fx-slash thin" style="--r:60deg;--c:#fff"></i><i class="fx-slash thin" style="--r:120deg;--c:#fff;animation-delay:.06s"></i>`, 600); },
+    caster(me, c) { add(me, `<i class="fx-core" style="--c:${c}"></i><i class="fx-ring" style="--c:${c}"></i>`, 700); },
+    dragon(me) { add(me, `<i class="fx-breath"></i>`, 900); rise(me, "#ff7a2e", [], 10, true); },
+  };
+  const v4ehit = RUN.enemyhit;
+  RUN.enemyhit = (ev) => {
+    const t = foeType(ev.i); const aff = G?.g?.combat?.enemies?.[ev.i]?.aff; const c = aff ? col(aff) : "#c58cff";
+    if (t === "caster" || t === "dragon") setTimeout(() => { const f = foeSprite(ev.i), me = meSprite(); if (f && me) projectile(f, me, t === "dragon" ? "#ff7a2e" : c, 260); }, 200);
+    setTimeout(() => TYPE_SFX[t]?.(), 120);
+    setTimeout(() => { const me = meSprite(); if (me) TYPE_FX[t]?.(me, c); }, 400);
+    return v4ehit(ev);
+  };
+
+  // Presentación de combate (no jefes): barrido de luz + fichas de enemigos
+  const v4intro = RUN.intro;
+  RUN.intro = (ev) => {
+    if (ev.boss) return v4intro(ev);
+    const es = (G?.g?.combat?.enemies || []).filter((e) => e.pv > 0);
+    const TI = { beast: "🐾", fly: "🪶", float: "👻", golem: "🗿", hop: "🐸", crawl: "🕷️", caster: "🔮", dragon: "🐉" };
+    add(stageEl(), `<div class="fx-encounter"><i class="bar a"></i><i class="bar b"></i><div class="cards">${es.map((e, i) => `<div class="card" style="animation-delay:${0.25 + i * 0.12}s;--c:${e.aff ? col(e.aff) : "#e6c47a"}"><span>${TI[foeType(G.g.combat.enemies.indexOf(e))] || "⚔️"}</span><b>${esc(e.n)}</b><small>${L("Nv", "Lv")} ${e.lvl}${e.aff ? " · " + esc(e.aff) : ""}</small></div>`).join("")}</div></div>`, 1700);
+    noise(0.4, { filter: "bandpass", f: 600, fTo: 3000, q: 2, vol: 0.3 }); [196, 247, 294].forEach((f, i) => tone(f, 0.6, { type: "sawtooth", vol: 0.05, delay: 0.2 + i * 0.02 }));
+    return v4intro(ev);
+  };
+  const v3introDur = DUR.intro; DUR.intro = (e) => (e.boss ? (typeof v3introDur === "function" ? v3introDur(e) : 1750) : 1300);
+
+  const v4css = document.createElement("style"); v4css.id = "fx-v4"; v4css.textContent = `
+.fx-blinded{animation:fxBlinded .9s ease-out}@keyframes fxBlinded{0%{filter:brightness(3.5) blur(3px)}100%{filter:none}}
+.fx-burning{animation:fxBurning .2s steps(2) 4}@keyframes fxBurning{50%{filter:drop-shadow(0 0 10px #ff7a2e) sepia(.6) saturate(3) hue-rotate(-20deg)}}
+.fx-dizzy{animation:fxDizzy .9s ease-in-out}@keyframes fxDizzy{20%{rotate:-8deg}40%{rotate:7deg}60%{rotate:-5deg}80%{rotate:3deg}}
+.fx-scared{animation:fxScared .1s linear 10;filter:grayscale(.6) brightness(.8)}@keyframes fxScared{50%{translate:2px 0}}
+.fx-orbit{position:absolute;left:50%;top:6%;width:80px;height:24px;margin-left:-40px;z-index:6}
+.fx-orbit i{position:absolute;left:50%;top:50%;font-style:normal;font-size:16px;animation:fxOrbitStar 1.2s linear infinite;animation-delay:calc(var(--k) * -.4s)}
+@keyframes fxOrbitStar{from{transform:rotate(0) translateX(34px) rotate(0) scaleY(2.2)}to{transform:rotate(360deg) translateX(34px) rotate(-360deg) scaleY(2.2)}}
+.fx-orbit{transform:scaleY(.45)}
+.fx-healglow{animation:fxHealGlow .9s ease-out}@keyframes fxHealGlow{30%{filter:drop-shadow(0 0 14px #8be0a8) brightness(1.3)}}
+.fx-aura{animation:fxAuraBuff 1s ease-out}@keyframes fxAuraBuff{30%{filter:drop-shadow(0 0 6px var(--c,#ffd84a)) drop-shadow(0 0 18px var(--c,#ffd84a)) brightness(1.25)}}
+.fx-hexwall{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px;z-index:5;background:var(--c);opacity:.0;
+  clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%,25% 3%,30% 10%,6% 50%,30% 90%,70% 90%,94% 50%,70% 10%,30% 10%);filter:drop-shadow(0 0 10px var(--c));animation:fxHex 1.1s ease-out forwards}
+@keyframes fxHex{0%{scale:.3;opacity:0;rotate:-30deg}30%{scale:1;opacity:.95;rotate:0deg}75%{opacity:.8}100%{opacity:0;scale:1.08}}
+.fx-veil{position:absolute;inset:-10% -15%;z-index:5;background:linear-gradient(180deg,#1a0a2acc,#4a1a6a88 60%,transparent);border-radius:40% 40% 10% 10%;animation:fxVeil 1.1s ease-out forwards}
+@keyframes fxVeil{0%{clip-path:inset(0 0 100% 0);opacity:1}35%{clip-path:inset(0 0 0 0)}100%{opacity:0}}
+.fx-blink{animation:fxBlink .7s steps(1)}@keyframes fxBlink{20%,60%{opacity:.15;translate:-10px 0}40%,80%{opacity:1;translate:6px 0}}
+.fx-speed{position:absolute;inset:0;z-index:5;background:repeating-linear-gradient(90deg,transparent 0 14px,color-mix(in srgb,var(--c) 70%,transparent) 14px 16px);-webkit-mask-image:linear-gradient(90deg,transparent,#000 40%,transparent);mask-image:linear-gradient(90deg,transparent,#000 40%,transparent);animation:fxSpeed .8s linear forwards}
+@keyframes fxSpeed{from{background-position:0 0;opacity:1}to{background-position:-120px 0;opacity:0}}
+.fx-breath{position:absolute;left:-40%;top:20%;width:180%;height:60%;z-index:5;background:radial-gradient(ellipse at 100% 50%,#fff3c0 0,#ffb03a 25%,#ff5a2a 50%,transparent 72%);mix-blend-mode:screen;animation:fxBreath .9s ease-out forwards;transform-origin:100% 50%}
+@keyframes fxBreath{0%{scale:0 .3;opacity:0}25%{scale:1 1;opacity:1}100%{scale:1.1 1.2;opacity:0}}
+.fx-encounter{position:absolute;inset:0;z-index:7;overflow:hidden;pointer-events:none}
+.fx-encounter .bar{position:absolute;left:-60%;width:220%;height:22%;rotate:-14deg;background:linear-gradient(90deg,transparent,#fff8e0cc 45%,#ffcf6a 50%,#fff8e0cc 55%,transparent);mix-blend-mode:screen;animation:fxEncBar .6s cubic-bezier(.5,0,.3,1) forwards}
+.fx-encounter .bar.a{top:24%}.fx-encounter .bar.b{top:58%;animation-delay:.1s;animation-direction:reverse}
+@keyframes fxEncBar{from{translate:-100% 0;opacity:1}to{translate:100% 0;opacity:.2}}
+.fx-encounter .cards{position:absolute;right:4%;top:50%;translate:0 -50%;display:grid;gap:8px}
+.fx-encounter .card{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;min-width:200px;padding:8px 16px 8px 12px;background:linear-gradient(90deg,#120a24ee,#2a1840dd);border:1px solid var(--c);border-left:4px solid var(--c);box-shadow:0 0 18px color-mix(in srgb,var(--c) 45%,transparent);clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%);animation:fxEncCard 1.6s cubic-bezier(.2,.9,.3,1) both}
+.fx-encounter .card span{grid-row:1/span 2;font-size:24px}
+.fx-encounter .card b{font-family:var(--display);color:#fff;letter-spacing:.05em;font-size:15px}
+.fx-encounter .card small{color:var(--c);font-size:12px;letter-spacing:.08em}
+@keyframes fxEncCard{0%{translate:120% 0;opacity:0}22%{translate:0 0;opacity:1}78%{translate:0 0;opacity:1}100%{translate:-20% 0;opacity:0}}
+@media (max-width:640px){.fx-encounter .card{min-width:150px}.fx-encounter .cards{right:2%}}
+@media (prefers-reduced-motion:reduce){.fx-encounter,.fx-breath{display:none}}
+@media (prefers-reduced-motion:reduce){.fx-blinded,.fx-burning,.fx-dizzy,.fx-scared,.fx-hexwall,.fx-veil,.fx-blink,.fx-speed,.fx-orbit i{animation-duration:.01s}}`;
+  document.head.appendChild(v4css);
+  // ---------- fin v4 ----------
   // =====================================================================
   function runQueue() {
     let t = 0; const evs = Q.splice(0);
     for (const ev of evs) { const fn = RUN[ev.k]; if (!fn) continue; setTimeout(() => { try { fn(ev); } catch (e) { console.warn("efectos:", e); } }, t); const d = DUR[ev.k]; t += typeof d === "function" ? d(ev) : d || 400; }
+    return t;
   }
 
   // ---------- estados que se quedan, peligro y muertes ----------
@@ -671,11 +1076,11 @@
     const b = G?.g?.lastBattle; const el = $q(".bresult");
     if (b && el && !seenBattle.has(b)) {
       seenBattle.add(b);
-      if (b.won) { el.classList.add("fx-win"); confetti(); const lv = el.querySelector(".lvlup"); if (lv) { lv.classList.add("fx-lvl"); setTimeout(() => SFX.level(), 900); } }
+      if (b.won) { el.classList.add("fx-win"); confetti(); countUp(el); const lv = el.querySelector(".lvlup"); if (lv) lv.classList.add("fx-lvl"); }
       else el.classList.add("fx-lose");
     }
     if (G) {
-      if (lastLvl && lastLvl.id === G.id && G.nivel > lastLvl.n) { const n = G.nivel, nm = G.nombre; setTimeout(() => { if (!$q(".lvlup")) { SFX.level(); bigMsg(L("¡NIVEL ", "LEVEL ") + n + "!", nm, "#8be0a8"); } }, 30); }
+      if (lastLvl && lastLvl.id === G.id && G.nivel > lastLvl.n) { const n = G.nivel; setTimeout(() => levelUpFx(n), $q(".bresult") ? 2600 : 300); }
       lastLvl = { id: G.id, n: G.nivel };
     }
     const cap = Store?.world?.cap;
@@ -697,8 +1102,9 @@
       document.body.appendChild(d); setTimeout(() => d.remove(), 2000); }
   }
   function ghost(snap, cls, ms) { const g = document.createElement("div"); g.className = "fx-ghost " + cls; g.style.cssText = `left:${snap.r.left}px;top:${snap.r.top}px;width:${snap.r.width}px;height:${snap.r.height}px`; g.innerHTML = snap.html; document.body.appendChild(g); setTimeout(() => g.remove(), ms); return g; }
+  let lastCombatSeen = null;
   function snapEnd() {
-    if (!G?.g?.combat) return null; const c = G.g.combat;
+    const c = G?.g?.combat || lastCombatSeen; if (!c || !$q(".foes2")) return null;
     const foes = [...document.querySelectorAll(".foes2 .foe2")].map((f, i) => { const sp = f.querySelector(".sprite"); return sp && !f.classList.contains("dead") ? { r: sp.getBoundingClientRect(), html: sp.innerHTML.replace(/<em[^>]*>.*?<\/em>/g, ""), aff: c.enemies[i]?.aff } : null; }).filter(Boolean);
     const ms = meSprite(); return { c, foes, me: ms ? { r: ms.getBoundingClientRect(), html: ms.innerHTML.replace(/<em[^>]*>.*?<\/em>/g, "") } : null };
   }
@@ -706,7 +1112,7 @@
     if (!pre || G?.g?.combat === pre.c) return; if (G?.g?.combat) return; // empezó otro combate
     const b = G?.g?.lastBattle;
     if (b && b.won) {
-      SFX.death(); setTimeout(() => SFX.victory(), 350);
+      SFX.death(); setTimeout(() => { SFX.victory(); victoryBurst(); }, 350);
       if (!RM) { pre.foes.forEach((f) => { ghost(f, "die", 1200); dust(f.r, [col(f.aff), "#ffffff", "#ffe9a0"]); }); const g = document.createElement("div"); g.className = "fx-goldflash"; document.body.appendChild(g); setTimeout(() => g.remove(), 1100); }
     } else if (b && !b.won) {
       SFX.defeat();
@@ -739,8 +1145,17 @@
 
   // ---------- enganche con render y toast ----------
   const _render = render;
+  // Remate: si un golpe termina el combate, la escena se mantiene hasta que acaban sus efectos.
+  let holdUntil = 0, holdTimer = null;
   render = function () {
+    const now = performance.now();
+    if (now < holdUntil) { clearTimeout(holdTimer); holdTimer = setTimeout(() => render(), holdUntil - now + 20); return; }
+    if (!RM && !G?.g?.combat && lastCombatSeen && Q.length && stageEl()) {
+      const ms = runQueue(); holdUntil = now + ms + 300; holdTimer = setTimeout(() => render(), ms + 320); return;
+    }
+    if (G?.g?.combat) lastCombatSeen = G.g.combat;
     const old = RM ? {} : snapBars(); let pre = null; try { pre = snapEnd(); } catch (e) {}
+    if (!G?.g?.combat) lastCombatSeen = null;
     const r = _render.apply(this, arguments);
     try { soundButton(); } catch (e) {}
     if (!RM) { try { animateBars(old); ambients(); ambientExtra(); persistentLooks(); resumeRunning(); runQueue(); results(); viewAnim(); } catch (e) { console.warn("efectos:", e); } }

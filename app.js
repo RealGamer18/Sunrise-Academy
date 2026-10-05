@@ -604,13 +604,14 @@ async function refreshProfiles() {
   if (!Store.user) return;
   const ids = [...new Set(Store.all.map((c) => c.owner))];
   if (!ids.length) return;
-  try { profileCache = await Store.user.profiles(ids); render(); } catch (e) {}
+  try { const p = await Store.user.profiles(ids); const changed = JSON.stringify(p) !== JSON.stringify(profileCache); profileCache = p; if (changed) render(); } catch (e) {}
 }
 
 function authView() {
   const msg = Store.authMessage ? `<div class="authmsg">${esc(Store.authMessage)}</div>` : "";
-  return `<section class="panel authbox">
-    <h2>🌅 Entrar en Sunrise Academy</h2>
+  return `<div class="sa-hero"><i class="sa-hcrest" aria-hidden="true"></i><p class="sa-hero-t">Sunrise Academy</p><p class="sa-hero-s">Cada amanecer forja una leyenda</p></div>
+  <section class="panel authbox">
+    <h2>Entrar en la Academia</h2>
     <p class="muted">El modo online necesita una cuenta para compartir personajes y mundo con otros jugadores.</p>
     ${msg}
     <div class="field"><label for="auth-email">Correo</label><input id="auth-email" type="email" autocomplete="email" placeholder="tu@email.com"></div>
@@ -661,7 +662,9 @@ function charView() {
     ${sheetHTML(ch, own ? Store.priv[ch.id] : null)}</section>`;
 }
 
+let renderAt = 0; // último redibujado (para no cortar animaciones con redibujados del servidor)
 function render() {
+  renderAt = Date.now();
   const main = $("#main");
   const active = document.activeElement; const fid = active && active.id; const ss = active?.selectionStart, se = active?.selectionEnd;
   const needsAuth = Store.mode === "supabase" && !Store.session;
@@ -679,6 +682,7 @@ function render() {
     $("#auth-name").value = authValues.name;
   }
   document.body.classList.toggle("ingame", !needsAuth && view.name === "game");
+  document.body.classList.toggle("sa-auth", needsAuth);
   const modeEl = $("#mode");
   if (Store.mode === "supabase") {
     modeEl.innerHTML = Store.session ? `<span class="topauth">☁️ En línea · ${esc(Store.user?.email || "jugador")} <button type="button" id="logout">Salir</button></span>` : "☁️ Servidor online";
@@ -849,11 +853,14 @@ document.addEventListener("change", async (ev) => {
 // ===== Arranque ===== (espera a que carguen todos los scripts: game.js va después)
 window.addEventListener("DOMContentLoaded", () => {
 loadDraft();
-let lastRender = 0, renderQueued = false;
+// Los cambios que llegan del servidor (incluida la confirmación de nuestro propio guardado) esperan
+// a que pase un momento sin redibujar: así no reinician las animaciones de entrada (sellos, mensajes…).
+let echoTimer = null;
 Store.onChange(() => {
   // En el juego, G es la copia de trabajo: no se pisa con la instantánea.
   if (view.name === "game" && document.activeElement?.id === "g-free") return; // no interrumpir mientras escribe
-  render(); refreshProfiles();
+  clearTimeout(echoTimer);
+  echoTimer = setTimeout(() => { render(); refreshProfiles(); }, Math.max(0, renderAt + 1700 - Date.now()));
 });
 render();
 Store.init().then(() => {

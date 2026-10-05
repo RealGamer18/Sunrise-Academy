@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><defs>
+<radialGradient id="c" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff2b8"/><stop offset=".35" stop-color="#ffcf4a"/><stop offset=".8" stop-color="#c9861a"/><stop offset="1" stop-color="#7a4a08"/></radialGradient>
+<linearGradient id="st" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9c79a"/><stop offset=".5" stop-color="#fff4d6"/><stop offset="1" stop-color="#b8a274"/></linearGradient>
+<linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ac25a"/><stop offset="1" stop-color="#2f6a26"/></linearGradient>
+<filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity=".6"/></filter></defs>
+<g filter="url(#sh)">
+<ellipse cx="48" cy="84" rx="36" ry="7" fill="url(#gr)" stroke="#1f4a18" stroke-width="1.4"/>
+<path d="M60 84 C60 74 62 64 64 56 L72 56 C72 64 72 74 72 84 Z" fill="url(#st)" stroke="#6a5530" stroke-width="1.4"/>
+<path d="M50 54 C50 40 60 32 68 32 C78 32 88 40 88 54 C80 58 58 58 50 54 Z" fill="url(#c)" stroke="#5a3404" stroke-width="1.6"/>
+<path d="M28 84 C28 70 30 58 33 48 L43 48 C44 58 44 70 44 84 Z" fill="url(#st)" stroke="#6a5530" stroke-width="1.4"/>
+<path d="M14 48 C14 28 26 16 38 16 C52 16 62 28 62 48 C52 54 24 54 14 48 Z" fill="url(#c)" stroke="#5a3404" stroke-width="1.8"/>
+<g fill="#fff8d8" stroke="#a87418" stroke-width=".8"><circle cx="30" cy="28" r="4"/><circle cx="44" cy="24" r="3"/><circle cx="50" cy="38" r="3.4"/><circle cx="24" cy="40" r="2.6"/><circle cx="72" cy="40" r="3"/><circle cx="80" cy="47" r="2.2"/></g>
+<path d="M22 26 C26 20 32 18 36 18" stroke="#fff" stroke-opacity=".75" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+<path d="M20 84 l3 -9 3 9 M76 84 l3 -10 3 10 M50 85 l2 -6 2 6" fill="#5aa83a" stroke="#2f6a26" stroke-width="1"/></g>
+<g fill="#fff6c0"><path d="M84 18 l1.2 3.2 3.2 1.2 -3.2 1.2 -1.2 3.2 -1.2 -3.2 -3.2 -1.2 3.2 -1.2z"/><path d="M10 64 l1 2.6 2.6 1 -2.6 1 -1 2.6 -1 -2.6 -2.6 -1 2.6 -1z"/></g></svg>
