@@ -575,7 +575,7 @@ function buildChar() {
 function sheetHTML(ch, priv, preview) {
   const owner = ch.owner && Store.user && ch.owner !== Store.uid ? profileName(ch.owner) : "";
   return `<article class="sheet">
-    <header class="sh-head"><div class="sh-who">${raceImg(ch.raza, "rimg sh-img")}<div><h2>${esc(ch.nombre || "Sin nombre")}</h2>
+    <header class="sh-head"><div class="sh-who">${((window.SA_AV && window.SA_AV.face(ch, "rimg sh-img")) || raceImg(ch.raza, "rimg sh-img"))}<div><h2>${esc(ch.nombre || "Sin nombre")}</h2>
       <p>${esc(ch.raza)}${ch.sub ? " · " + esc(ch.sub) : ""}${ch.mestizo ? " · mestizo con " + esc(ch.mestizo) : ""} · ${esc(ch.edad)} años · ${esc(ch.trasfondo || "sin trasfondo")}${owner ? ` · jugador: ${esc(owner)}` : ""}</p>
       ${ch.personalidad ? `<p class="muted">${esc(ch.personalidad)}${ch.apariencia ? " · " + esc(ch.apariencia) : ""}</p>` : ""}</div></div>
       <div class="badges"><span class="pill">Nivel ${ch.nivel}</span><span class="pill">Rango ${esc(ch.rango)}</span><span class="pill">Peldaño ${esc(ch.peldano)}</span></div></header>
@@ -624,7 +624,7 @@ function authView() {
 function homeView() {
   const mine = Store.mine(), others = Store.others();
   const card = (c, own) => `<div class="ccw"><button type="button" class="cc" data-open="${c.id}">
-      ${raceImg(c.raza, "rimg cc-img")}<b>${esc(c.nombre)}</b><small>${esc(c.raza)}${c.sub ? " · " + esc(c.sub) : ""} · ${esc(c.trasfondo)}</small>
+      ${((window.SA_AV && window.SA_AV.face(c, "rimg cc-img")) || raceImg(c.raza, "rimg cc-img"))}<b>${esc(c.nombre)}</b><small>${esc(c.raza)}${c.sub ? " · " + esc(c.sub) : ""} · ${esc(c.trasfondo)}</small>
       <span>${c.afinidades.map((a) => esc(a.n)).join(" + ") || "Sin afinidad"} · Nivel ${c.nivel}${own ? "" : ` · ${esc(profileName(c.owner))}`}</span>
       ${c.g?.loc ? `<span>📍 ${esc(P[c.g.loc.r]?.[c.g.loc.p]?.n || "")} · día ${c.g.day}</span>` : ""}</button>
       ${own ? `<button type="button" class="btn primary small play" data-play="${c.id}">${c.g ? "▶ Continuar" : "▶ Jugar"}</button>` : ""}</div>`;

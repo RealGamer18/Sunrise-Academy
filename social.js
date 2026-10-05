@@ -342,7 +342,7 @@
     return { t: m.i > mi ? L(`mismo capítulo · ${m.i - mi} paso(s) por delante`, "same chapter, ahead") : L(`mismo capítulo · ${mi - m.i} paso(s) por detrás`, "same chapter, behind"), k: "samecap" };
   }
   const storyOf = (c) => { const m = c.g?.mis; if (!m || !window.SA_STORY) return ""; const ch = typeof STORY !== "undefined" ? STORY.find((s) => s.cap === m.cap) : null; return `📜 ${capName(m.cap)}${ch ? ` «${ch.t}»` : ""} · ${window.SA_STORY.labelOf(m)}`; };
-  const face = (c, cls = "rimg pface") => (typeof raceImg === "function" ? raceImg(c.raza, cls) : "") || `<span class="pface e">🧑</span>`;
+  const face = (c, cls = "rimg pface") => (window.SA_AV && window.SA_AV.face(c, cls)) || (typeof raceImg === "function" ? raceImg(c.raza, cls) : "") || `<span class="pface e">🧑</span>`;
   const byRecent = (a, b) => (isOn(b) - isOn(a)) || (b.lastSeen || 0) - (a.lastSeen || 0);
 
   function playersBox() {
@@ -447,7 +447,7 @@
       const k = keyOf(c.g.loc); const s = (slot[k] = (slot[k] || 0) + 1) - 1; const xy = P[c.g.loc.r][c.g.loc.p].xy;
       const ang = (-90 + s * 55) * Math.PI / 180; const x = Math.round(xy[0] + 40 * Math.cos(ang)), y = Math.round(xy[1] + 40 * Math.sin(ang));
       const rid = raceId(c.raza);
-      mk += `<g class="pmk ${isOn(c) ? "on" : "off"}" data-pin="${k}"><title>${esc(c.nombre)} · ${esc(actOf(c))}</title><line x1="${xy[0]}" y1="${xy[1]}" x2="${x}" y2="${y}"></line><clipPath id="pmc${idx}"><circle cx="${x}" cy="${y}" r="19"></circle></clipPath><circle class="ring" cx="${x}" cy="${y}" r="22"></circle>${rid ? `<image href="razas/${rid}.png" x="${x - 19}" y="${y - 19}" width="38" height="38" clip-path="url(#pmc${idx})" preserveAspectRatio="xMidYMid slice"></image>` : `<text x="${x}" y="${y + 6}" class="em">🧑</text>`}<text class="nm" x="${x}" y="${y + 38}">${esc(c.nombre.split(" ")[0])}</text></g>`;
+      mk += `<g class="pmk ${isOn(c) ? "on" : "off"}" data-pin="${k}"><title>${esc(c.nombre)} · ${esc(actOf(c))}</title><line x1="${xy[0]}" y1="${xy[1]}" x2="${x}" y2="${y}"></line><clipPath id="pmc${idx}"><circle cx="${x}" cy="${y}" r="19"></circle></clipPath><circle class="ring" cx="${x}" cy="${y}" r="22"></circle>${rid ? `<image ${(() => { const u = window.SA_AV && window.SA_AV.url(c); return u ? `data-avk="${u.k}" href="${u.url}"` : `href="razas/${rid}.png"`; })()} x="${x - 19}" y="${y - 19}" width="38" height="38" clip-path="url(#pmc${idx})" preserveAspectRatio="xMidYMid slice"></image>` : `<text x="${x}" y="${y + 6}" class="em">🧑</text>`}<text class="nm" x="${x}" y="${y + 38}">${esc(c.nombre.split(" ")[0])}</text></g>`;
     });
     const at = out.lastIndexOf("</svg>");
     if (mk && at >= 0) out = out.slice(0, at) + mk + out.slice(at);

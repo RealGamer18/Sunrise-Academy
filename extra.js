@@ -439,7 +439,7 @@
   // 10. CHAT DEL GRUPO (cada uno guarda sus últimos mensajes en su personaje)
   // =====================================================================
   const QUICK = [() => L(`¡Ven a ${pname(G.g.loc.r, G.g.loc.p)}!`, `Come to ${pname(G.g.loc.r, G.g.loc.p)}!`), () => L("Necesito ayuda 🆘", "Need help 🆘"), () => L("¿Hacemos la historia juntos?", "Story together?"), () => L("Voy para allá 🏃", "On my way 🏃"), () => L("¡Gané! 🎉", "I won! 🎉"), () => "gg"];
-  const msgs = () => { const out = []; for (const c of meAll()) for (const m of c.g?.chat || []) out.push({ ...m, n: c.nombre, me: c.owner === Store.uid, raza: c.raza }); return out.sort((a, b) => a.at - b.at).slice(-60); };
+  const msgs = () => { const out = []; for (const c of meAll()) for (const m of c.g?.chat || []) out.push({ ...m, n: c.nombre, me: c.owner === Store.uid, raza: c.raza, cid: c.id }); return out.sort((a, b) => a.at - b.at).slice(-60); };
   let chatOpen = false; let lastSeenChat = (() => { try { return +localStorage.getItem("sa-chat-seen") || 0; } catch (e) { return 0; } })();
   function chatSend(t) {
     t = String(t || "").trim().slice(0, 200); if (!t || !G) return;
@@ -463,7 +463,7 @@
     const unread = list.filter((m) => !m.me && m.at > lastSeenChat).length; root.querySelector("#xchat-n").textContent = unread ? unread : ""; root.querySelector("#xchat-btn").classList.toggle("has", !!unread);
     if (chatOpen) {
       const l = root.querySelector("#xchat-l"); const atBottom = l.scrollHeight - l.scrollTop - l.clientHeight < 40;
-      l.innerHTML = list.length ? list.map((m) => `<div class="xm ${m.me ? "me" : ""}">${typeof raceImg === "function" ? raceImg(m.raza, "rimg mface") : ""}<div><b>${esc(m.n)}</b> <small>${new Date(m.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small><div>${esc(m.t)}</div></div></div>`).join("") : `<p class="muted">${L("Nadie ha escrito todavía. ¡Saluda!", "No messages yet. Say hi!")}</p>`;
+      l.innerHTML = list.length ? list.map((m) => `<div class="xm ${m.me ? "me" : ""}">${(window.SA_AV && window.SA_AV.faceById(m.cid, "rimg mface")) || (typeof raceImg === "function" ? raceImg(m.raza, "rimg mface") : "")}<div><b>${esc(m.n)}</b> <small>${new Date(m.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small><div>${esc(m.t)}</div></div></div>`).join("") : `<p class="muted">${L("Nadie ha escrito todavía. ¡Saluda!", "No messages yet. Say hi!")}</p>`;
       if (scroll || atBottom) l.scrollTop = l.scrollHeight;
       const q = root.querySelector("#xchat-q"); q.innerHTML = QUICK.map((f, i) => `<button type="button" class="chip" data-q="${i}">${esc(f())}</button>`).join("");
     }
