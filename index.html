@@ -327,6 +327,27 @@ body.ingame::before{content:"";position:fixed;inset:0;background:var(--rbg) cent
 .ar-dot{fill:var(--gold);stroke:var(--panel-2);stroke-width:2;cursor:help}.ar-dot:hover{r:7}
 .ar figcaption{display:flex;justify-content:center;gap:16px;font-size:13px;color:var(--ink-2)}.ar figcaption span{display:flex;align-items:center;gap:6px}
 .ar-k{display:inline-block;width:18px;height:0;border-top:2px solid var(--gold)}.ar-k.base{border-top:2px dashed var(--ink)}
+.wp-sheet{align-self:stretch;display:flex;flex-direction:column;gap:6px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line);text-align:left}
+.wp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;text-align:center}.wp-stats span{background:#0e1824;border:1px solid var(--line);border-radius:5px;padding:4px 2px}
+.wp-stats small,.wp-row small{display:block;font-size:11px;color:var(--ink-2);letter-spacing:.04em}.wp-stats b{color:var(--gold);font-size:17px}
+.wp-row span{font-size:13.5px;line-height:1.3}
+.ar.mini{margin:4px auto 0;max-width:150px}.ar.mini .ar-dot{r:3.5}
+.stepbody.enter{animation:stepIn .4s ease}
+@keyframes stepIn{from{opacity:0;transform:translateY(10px)}}
+.enter .ar-tot,.enter .ar-base,.enter .ar-dot{transform-box:view-box;transform-origin:150px 150px;animation:arGrow .9s cubic-bezier(.2,1.4,.4,1) both}
+.enter .ar-dot{animation-delay:.25s}
+@keyframes arGrow{from{transform:scale(0) rotate(-40deg);opacity:0}}
+@media (max-width:760px){.wp-sheet{flex-basis:100%}.wp-sheet .ar,.wp-row{display:none}}
+@media (prefers-reduced-motion:reduce){.stepbody.enter,.enter .ar-tot,.enter .ar-base,.enter .ar-dot{animation:none}}
+.rcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:12px;margin-bottom:14px}
+.rcard{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 14px 14px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;background:linear-gradient(180deg,var(--panel-2),#0e0b1f);border:1px solid var(--line);border-radius:10px;transition:transform .18s,border-color .18s,box-shadow .18s}
+.rcard:hover{transform:translateY(-3px);border-color:#d9a44188;box-shadow:0 8px 22px #0008}
+.rcard.sel{border-color:var(--gold);box-shadow:0 0 0 2px #d9a44155,0 0 26px #d9a44144;background:linear-gradient(180deg,#3a2a50,#140e2a)}
+.rcard-img{width:120px;height:120px;transition:transform .25s}.rcard:hover .rcard-img,.rcard.sel .rcard-img{transform:scale(1.06)}
+.rcard-n{font-family:var(--display);font-size:20px;color:var(--gold);letter-spacing:.04em;margin-bottom:2px}
+.rcard-l{display:flex;gap:7px;align-self:stretch;font-size:13.5px;line-height:1.35;color:var(--ink-2)}.rcard-l i{font-style:normal;flex:0 0 auto;width:14px;text-align:center}
+.rcard-l.bono i{color:#ffd98a}.rcard-l.hab i{color:#8ac8ff}.rcard-l.deb i{color:#ff8a8a}
+@media (prefers-reduced-motion:reduce){.rcard,.rcard-img{transition:none}}
 .pt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(64px,100%),1fr));gap:6px;margin-bottom:6px}
 .pt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;background:transparent;border:1px solid transparent;border-radius:6px;color:var(--ink-2);cursor:pointer;font:inherit}
 .pt:hover{border-color:var(--line)}.pt.on{border-color:var(--gold);background:var(--gold-soft);color:var(--ink)}
@@ -352,13 +373,14 @@ body.ingame::before{content:"";position:fixed;inset:0;background:var(--rbg) cent
 <script src="data.js?v=20261008g"></script>
 <script src="world.js?v=20261008g"></script>
 <script src="content.js?v=20261008g"></script>
-<script src="app.js?v=20261008i"></script>
+<script src="app.js?v=20261009b"></script>
 <script src="game.js?v=20261008g"></script>
 <script src="dioses.js?v=20261008g"></script>
 <script src="arbol.js?v=20261008g"></script>
 <script src="combate.js?v=20261008g"></script>
-<script src="i18n.js?v=20261008i"></script>
+<script src="i18n.js?v=20261009b"></script>
 <script src="efectos.js?v=20261008g"></script>
+<script src="dados.js?v=20261009a"></script>
 <script src="misiones.js?v=20261008g"></script>
 <script src="historia.js?v=20261008g"></script>
 <script src="arcos.js?v=20261008g"></script>

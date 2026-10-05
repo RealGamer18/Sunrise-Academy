@@ -376,7 +376,7 @@ function draftAv() {
   const p = draft.port; const raza = draft.raza || "humano";
   if (p.st === "build") return window.SA_AV.lookAv(raza, draft.look, draft.accesorios);
   const bg = p.bg || "none";
-  return { m: "race", base: p.base || raza, z: 1.32, x: 0, y: 0, ...(PTONOS.find((t) => t[0] === p.tono)?.[1] || {}), bg, fb: bg === "none" ? 0 : 45, fr: p.fr || "oro" };
+  return { m: "race", base: p.base || raza, z: 1.32, x: 0, y: 0, ...(PTONOS.find((t) => t[0] === p.tono)?.[1] || {}), bg, fb: bg === "none" ? 0 : 80, fr: p.fr || "oro" };
 }
 function portraitCard() {
   if (!window.SA_AV) return "";
@@ -408,8 +408,13 @@ function stepConcept() {
   <p class="note">Todos los personajes tienen 18 años o más.</p>`;
 }
 
+// Tarjeta grande de raza: arte, bono, habilidad y debilidad a la vista.
 function raceCard(r, sel) {
-  return `<button type="button" class="rc ${sel ? "sel" : ""}" data-raza="${r.id}" aria-pressed="${sel}">${raceImg(r.id, "rimg rc-img")}<b>${esc(r.n)}</b><small>${esc(r.bono)}</small></button>`;
+  return `<button type="button" class="rcard ${sel ? "sel" : ""}" data-raza="${r.id}" aria-pressed="${sel}">${raceImg(r.id, "rimg rcard-img")}
+    <b class="rcard-n">${esc(r.n)}</b>
+    <span class="rcard-l bono"><i>✦</i>${esc(r.bono)}</span>
+    <span class="rcard-l hab"><i>★</i>${esc(r.hab)}</span>
+    <span class="rcard-l deb"><i>✖</i>${esc(r.deb)}</span></button>`;
 }
 function stepRace() {
   const r = raceById(draft.raza);
@@ -417,12 +422,7 @@ function stepRace() {
   if (r) {
     detail = `<div class="card">
       <h3>${esc(r.n)}</h3>
-      <dl>
-        <dt>Bono racial</dt><dd>${esc(r.bono)}</dd>
-        <dt>Habilidad</dt><dd>${esc(r.hab)}</dd>
-        <dt>Debilidad</dt><dd>${esc(r.deb)}</dd>
-        <dt>De dónde</dt><dd>${esc(r.donde)}</dd>
-      </dl>
+      <dl><dt>De dónde</dt><dd>${esc(r.donde)}</dd></dl>
       <label class="f">Sub-raza<div class="row"><select id="f-sub"><option value="">Elige…</option>${r.subs.map(([n, t]) => `<option value="${esc(n)}" ${draft.sub === n ? "selected" : ""}>${esc(n)} — ${esc(t)}</option>`).join("")}</select>${dieBtn("sub", "1d" + r.subs.length)}</div></label>
       ${r.b.choose ? `<div class="f">Elige 2 atributos para tu +1 humano ${dieBtn("hc", "Tirar 2d8")}<div class="chips">${ATTRS.map(([k, n]) => `<button type="button" class="chip ${draft.humanChoice.includes(k) ? "on" : ""}" data-hc="${k}">${esc(n)}</button>`).join("")}</div></div>` : ""}
       <label class="check"><input type="checkbox" id="f-mestizo" ${draft.mestizo ? "checked" : ""}> Es mestizo (hijo de dos razas)</label>
@@ -433,7 +433,7 @@ function stepRace() {
     </div>`;
   }
   return `<div class="row between"><p class="lead">Elige una de las 16 razas o déjalo a la suerte.</p>${dieBtn("raza", "1d16")}</div>
-    <div class="races">${RAZAS.map((x) => raceCard(x, x.id === draft.raza)).join("")}</div>${detail}`;
+    <div class="rcards">${RAZAS.map((x) => raceCard(x, x.id === draft.raza)).join("")}</div>${detail}`;
 }
 
 function stepBirth() {
@@ -445,15 +445,15 @@ function stepBirth() {
 }
 
 // Radar de atributos: total (relleno) y, en el asistente, el reparto propio sin raza (discontinuo).
-function attrRadar(base, tot) {
+function attrRadar(base, tot, mini = false) {
   const S = 300, C = S / 2, R = 100, lo = Math.min(-1, ...ATTRS.map(([k]) => tot[k])), hi = Math.max(4, ...ATTRS.map(([k]) => tot[k]));
   const n = ATTRS.length, ang = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
   const pt = (i, v, r = R * (v - lo) / (hi - lo)) => [C + r * Math.cos(ang(i)), C + r * Math.sin(ang(i))];
   const poly = (o) => ATTRS.map(([k], i) => pt(i, o[k]).map((x) => x.toFixed(1)).join(",")).join(" ");
   const rings = Array.from({ length: hi - lo }, (_, j) => j + lo + 1).map((v) => `<polygon class="ar-ring${v === 0 ? " zero" : ""}" points="${ATTRS.map((_, i) => pt(i, v).join(",")).join(" ")}"/>`).join("");
-  const axes = ATTRS.map(([k, nm], i) => { const [x, y] = pt(i, 0, R); const [lx, ly] = pt(i, 0, R + 22); return `<line class="ar-axis" x1="${C}" y1="${C}" x2="${x}" y2="${y}"/><text class="ar-lb" x="${lx}" y="${ly}" text-anchor="${Math.abs(lx - C) < 4 ? "middle" : lx < C ? "end" : "start"}" dominant-baseline="middle">${esc(nm.split(/[ /&]/)[0])}</text>`; }).join("");
+  const axes = ATTRS.map(([k, nm], i) => { const [x, y] = pt(i, 0, R); const [lx, ly] = pt(i, 0, R + 22); return `<line class="ar-axis" x1="${C}" y1="${C}" x2="${x}" y2="${y}"/>${mini ? "" : `<text class="ar-lb" x="${lx}" y="${ly}" text-anchor="${Math.abs(lx - C) < 4 ? "middle" : lx < C ? "end" : "start"}" dominant-baseline="middle">${esc(nm.split(/[ /&]/)[0])}</text>`}`; }).join("");
   const dots = ATTRS.map(([k, nm], i) => { const [x, y] = pt(i, tot[k]); const b = base ? tot[k] - base[k] : 0; return `<circle class="ar-dot" cx="${x}" cy="${y}" r="4.5"><title>${esc(nm)}: ${sgn(tot[k])}${b ? ` (raza ${sgn(b)})` : ""}</title></circle>`; }).join("");
-  return `<figure class="ar"><svg viewBox="-80 -6 460 312" role="img" aria-label="Gráfico de atributos">${rings}${axes}
+  return `<figure class="ar${mini ? " mini" : ""}"><svg viewBox="${mini ? "40 40 220 220" : "-80 -6 460 312"}" role="img" aria-label="Gráfico de atributos">${rings}${axes}
     <polygon class="ar-tot" points="${poly(tot)}"/>${base ? `<polygon class="ar-base" points="${poly(base)}"/>` : ""}${dots}</svg>
     ${base ? `<figcaption><span><i class="ar-k tot"></i>Total con raza</span><span><i class="ar-k base"></i>Tu reparto</span></figcaption>` : ""}</figure>`;
 }
@@ -689,16 +689,30 @@ function wizPreview() {
   return `<aside class="wiz-prev" aria-live="polite">${img}
     <b>${esc(draft.nombre.trim() || "Sin nombre")}</b>
     <small>${r ? esc(r.n) + (draft.sub ? " · " + esc(draft.sub) : "") : "Raza por elegir"}</small>
-    ${draft.personalidad ? `<small class="muted">${esc(draft.personalidad)}</small>` : ""}</aside>`;
+    ${draft.personalidad ? `<small class="muted">${esc(draft.personalidad)}</small>` : ""}
+    ${wizSheet()}</aside>`;
+}
+function wizSheet() {
+  const c = compute(); const rows = [];
+  if (draft.nac) rows.push(["Nacimiento", NACIMIENTO.find((r) => r[2] === draft.nac)?.[3] || ""]);
+  if (c.dom.length) rows.push(["Afinidades", c.dom.map((a) => a.n).join(" + ")]);
+  if (draft.trasfondo) rows.push(["Trasfondo", draft.trasfondo]);
+  if (draft.profesor) rows.push(["Profesor", draft.profesor]);
+  const touched = draft.raza || ATTRS.some(([k]) => draft.alloc[k]);
+  return `<div class="wp-sheet">
+    <div class="wp-stats"><span><small>PV</small><b>${c.pv}</b></span><span><small>Maná</small><b>${draft.manaRoll != null || c.sinAfin ? c.mana : "?"}</b></span><span><small>Energía</small><b>10</b></span></div>
+    ${rows.map(([k, v]) => `<div class="wp-row"><small>${esc(k)}</small><span>${esc(v)}</span></div>`).join("")}
+    ${touched ? attrRadar(null, c.attrs, true) : ""}</div>`;
 }
 
+let wizLastStep = -1;
 function wizardView() {
-  const s = draft.step;
+  const s = draft.step; const enter = s !== wizLastStep; wizLastStep = s;
   return `<section class="panel wiz">
     <div class="row between"><button type="button" class="link" id="home">← Mis personajes</button><span class="muted">Paso ${s + 1} de ${STEPS.length}</span></div>
     <ol class="steps">${STEPS.map((n, i) => `<li><button type="button" data-step="${i}" class="${i === s ? "cur" : ""} ${i < s ? "done" : ""}">${i + 1}. ${esc(n)}</button></li>`).join("")}</ol>
     <h2>${s + 1}. ${esc(STEPS[s])}</h2>
-    <div class="wiz-main"><div class="stepbody">${STEP_FN[s]()}</div>${wizPreview()}</div>
+    <div class="wiz-main"><div class="stepbody${enter ? " enter" : ""}">${STEP_FN[s]()}</div>${wizPreview()}</div>
     <div class="row between nav"><button type="button" class="btn ghost" id="prev" ${s === 0 ? "disabled" : ""}>Anterior</button>${s < STEPS.length - 1 ? `<button type="button" class="btn primary" id="next">Siguiente</button>` : ""}</div>
   </section>`;
 }
@@ -745,11 +759,13 @@ let toastT;
 function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 3500); }
 
 // ===== Dados =====
-function act(a) {
-  if (a === "pers") { const v = d(12); draft.personalidad = PERSONALIDADES[v - 1]; toast(`1d12 = ${v}: ${draft.personalidad}`); }
-  if (a === "raza") { const v = d(16); const r = RAZAS[v - 1]; draft.raza = r.id; draft.sub = ""; draft.humanChoice = []; toast(`1d16 = ${v}: ${r.n}`); }
-  if (a === "sub") { const r = raceById(draft.raza); const v = d(r.subs.length); draft.sub = r.subs[v - 1][0]; toast(`1d${r.subs.length} = ${v}: ${draft.sub}`); }
-  if (a === "nac") { const v = d(100); draft.nacRoll = v; draft.nac = inRange(NACIMIENTO, v)[2]; draft.afin = []; draft.manaRoll = null; toast(`d100 = ${v}`); }
+async function act(a) {
+  const rolls = []; // tiradas que se muestran con animación (dados.js) antes de redibujar
+  const roll = (sides, value, label, result, tier = false) => rolls.push({ sides, value, label, result, tier });
+  if (a === "pers") { const v = d(12); draft.personalidad = PERSONALIDADES[v - 1]; roll(12, v, "Personalidad · 1d12", draft.personalidad); }
+  if (a === "raza") { const v = d(16); const r = RAZAS[v - 1]; draft.raza = r.id; draft.sub = ""; draft.humanChoice = []; roll(16, v, "Raza · 1d16", r.n); }
+  if (a === "sub") { const r = raceById(draft.raza); const v = d(r.subs.length); draft.sub = r.subs[v - 1][0]; roll(r.subs.length, v, `Sub-raza · 1d${r.subs.length}`, draft.sub); }
+  if (a === "nac") { const v = d(100); draft.nacRoll = v; draft.nac = inRange(NACIMIENTO, v)[2]; draft.afin = []; draft.manaRoll = null; roll(100, v, "Nacimiento · d100", inRange(NACIMIENTO, v)[3], true); }
   if (a === "afin") {
     const need = { una: [false], dos: [false, false], abs: [true], "una+abs": [false, true] }[draft.nac] || [];
     const out = [];
@@ -757,9 +773,9 @@ function act(a) {
       let v, n; do { v = d(100); n = inRange(abs ? ABSTRACTAS : ELEMENTALES, v)[2]; } while (out.some((o) => o.n === n));
       out.push({ n, abs, roll: v });
     }
-    draft.afin = out; toast(out.map((o) => `${o.roll} → ${o.n}`).join(" · "));
+    draft.afin = out; out.forEach((o) => roll(100, o.roll, `Afinidad ${o.abs ? "abstracta" : "elemental"} · d100`, o.n));
   }
-  if (a === "mana") { draft.manaRoll = d(1000); toast(`1d1000 = ${draft.manaRoll}`); }
+  if (a === "mana") { draft.manaRoll = d(1000); roll(1000, draft.manaRoll, "Maná · 1d1000", `Maná máximo: ${compute().mana}`, true); }
   if (a === "attrs") {
     const c = compute(); const total = 6 + (c.sinAfin ? 2 : 0);
     draft.alloc = Object.fromEntries(ATTRS.map(([k]) => [k, 0]));
@@ -774,13 +790,15 @@ function act(a) {
   if (a === "motivo") { draft.motivo = MOTIVOS[d(MOTIVOS.length) - 1]; }
   if (a === "secreto") { draft.secreto = SECRETOS[d(SECRETOS.length) - 1]; }
   if (a === "arma") { draft.arma = ARMAS[d(ARMAS.length) - 1]; toast(`Arma: ${draft.arma}`); }
-  if (a === "tras") { const v = d(12); draft.trasfondo = TRASFONDOS[v - 1].n; toast(`1d12 = ${v}: ${draft.trasfondo}`); }
-  if (a === "profe") { const v = d(7); draft.profesor = PROFESORES[v - 1][0]; toast(`1d7 = ${v}: ${draft.profesor}`); }
+  if (a === "tras") { const v = d(12); draft.trasfondo = TRASFONDOS[v - 1].n; roll(12, v, "Trasfondo · 1d12", draft.trasfondo); }
+  if (a === "profe") { const v = d(7); draft.profesor = PROFESORES[v - 1][0]; roll(7, v, "Profesor · 1d7", draft.profesor); }
   if (a.startsWith("vrel:") || a === "vall") {
     const ids = a === "vall" ? Store.others().map((o) => o.id) : [a.slice(5)];
     for (const id of ids) { const o = Store.others().find((x) => x.id === id); const v = d(6); setVinc(id, { nombre: o.nombre, rel: RELACIONES[v - 1], story: "" }); }
     toast("Relaciones tiradas");
   }
+  if (rolls.length && window.SA_DICE) { saveDraft(); await window.SA_DICE.seq(rolls); }
+  else if (rolls.length) toast(rolls.map((r) => `${r.value}: ${r.result}`).join(" · "));
   saveDraft(); render();
 }
 function setVinc(id, patch) {
