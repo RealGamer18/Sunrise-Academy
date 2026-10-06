@@ -378,11 +378,14 @@ function draftAv() {
   const bg = p.bg || "none";
   return { m: "race", base: p.base || raza, z: 1.32, x: 0, y: 0, ...(PTONOS.find((t) => t[0] === p.tono)?.[1] || {}), bg, fb: bg === "none" ? 0 : 80, fr: p.fr || "oro" };
 }
+// Retratos extra por raza (generados con SpriteCook; ver spritecook-assets.json). Archivo: razas/<id>.png
+const PEXTRA = { humano: [["humano-2", "Humana"]], elfo: [["elfo-2", "Elfo mago"]] };
 function portraitCard() {
   if (!window.SA_AV) return "";
   const p = draft.port || {}; const on = (k, v, d) => ((p[k] ?? d) === v ? "on" : "");
   const chip = (k, v, label, d) => `<button type="button" class="chip ${on(k, v, d)}" aria-pressed="${!!on(k, v, d)}" data-port="${k}|${esc(v)}">${esc(label)}</button>`;
-  const painted = `<h4>Retrato base</h4><div class="pt-grid">${RAZAS.map((r) => `<button type="button" class="pt ${on("base", r.id, draft.raza || "humano")}" aria-pressed="${!!on("base", r.id, draft.raza || "humano")}" data-port="base|${r.id}" title="${esc(r.n)}">${raceImg(r.id, "rimg pt-img")}<small>${esc(r.n)}</small></button>`).join("")}</div>
+  const bases = RAZAS.flatMap((r) => [[r.id, r.n, raceImg(r.id, "rimg pt-img")], ...(PEXTRA[r.id] || []).map(([id, n]) => [id, n, `<img class="rimg pt-img" src="razas/${id}.png" alt="" loading="lazy">`])]);
+  const painted = `<h4>Retrato base</h4><div class="pt-grid">${bases.map(([id, n, img]) => `<button type="button" class="pt ${on("base", id, draft.raza || "humano")}" aria-pressed="${!!on("base", id, draft.raza || "humano")}" data-port="base|${id}" title="${esc(n)}">${img}<small>${esc(n)}</small></button>`).join("")}</div>
     <h4>Tono</h4><div class="chips">${PTONOS.map(([n]) => chip("tono", n, n, "Natural")).join("")}</div>
     <h4>Fondo</h4><div class="chips">${window.SA_AV.freeBgs.map(([id, n]) => chip("bg", id, n, "none")).join("")}</div>
     <h4>Marco</h4><div class="chips">${chip("fr", "oro", "Oro", "oro")}${chip("fr", "none", "Sin marco", "oro")}</div>`;

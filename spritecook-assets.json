@@ -1,0 +1,20 @@
+{
+  "nota": "Retratos generados con SpriteCook (gpt-image-2, calidad baja, 1K, 2 créditos cada uno), reducidos a 256 px con esquinas transparentes. Los de raza se hicieron editando (edit_asset_id) el retrato original subido; los -2 son nuevos con guía de estilo.",
+  "originales_subidos": {
+    "humano": "14177f33-694b-41f0-9ca2-c7e08f2ea450", "elfo": "c87aa5e1-fb92-4f68-b7ab-7306f62e77e1", "celestial": "c6ab37b4-b747-4069-b03e-acc6143fc902",
+    "enano": "62c0b972-b531-4e98-9e0e-d440896fae69", "bestial": "efd66454-eddf-4a9e-800f-ee08efd90925", "draconido": "e6c4fced-23ac-4f6f-9d4b-f169842da7ae",
+    "sirenido": "9cf90d00-5412-48d6-b1d6-d340c1a38f96", "feerico": "3d6ef7d3-3b0c-4cf0-b1ad-40c4b579180f", "umbrio": "91ce5369-41fb-4c76-a952-5a5acd46955b",
+    "orco": "7ab703ee-780a-49de-82c6-6cca7f50662a", "vampiro": "81f25fc0-bbfb-4584-8c16-f208025230c6", "semigigante": "5cb101da-c713-4a87-9dfb-d70c8ab3c90e",
+    "gnomo": "51b69db3-3a1c-4bec-a3b3-358d42ef6892", "forjado": "f406c75c-f243-466a-81e3-e26fe33aaa2b", "silvano": "88c1e636-a1fb-4527-b299-bf9777597734",
+    "naga": "7919b5a4-e5de-41a3-bc20-c616934b8204"
+  },
+  "retratos": {
+    "razas/humano.png": "b7ab8afa-066f-4820-a3b3-e5c05d00730a", "razas/elfo.png": "31c0c835-5c41-4226-9dff-1813207c0b40", "razas/celestial.png": "b03ccbad-1a9d-4f4b-b1c6-d5019dd3c0f6",
+    "razas/enano.png": "65ddc4d7-583d-4369-b08b-69d8c6a8b716", "razas/bestial.png": "d8a90824-3458-450d-b1e1-d3b6b8f25332", "razas/draconido.png": "8086370a-f15a-43ce-a67d-234647aae887",
+    "razas/sirenido.png": "2787c4c3-b5e5-48b6-8c9a-162759912aa3", "razas/feerico.png": "88aedcb3-a0c9-4f23-ae29-5e2622721160", "razas/umbrio.png": "f206324c-6337-4b0b-b97c-35e878b45b79",
+    "razas/orco.png": "c44b8414-2b9d-4815-8399-920b569b0d4a", "razas/vampiro.png": "f2734a2a-ec26-4b0a-b808-80c56c04e6d1", "razas/semigigante.png": "5917caf7-abd9-450e-8cb2-d99d08f9d23e",
+    "razas/gnomo.png": "a754fcfa-3a7f-4648-8d42-e6c6ab99da9b", "razas/forjado.png": "9a780a04-4dab-49ac-a80e-df49c345c89d", "razas/silvano.png": "9fcd69a1-685b-4a62-80fe-be9e465c288e",
+    "razas/naga.png": "9fd10684-aa9a-4295-affe-2776d3c69ac1",
+    "razas/humano-2.png": "4816cebb-66f4-4b93-be9a-ecd8c9e86e60", "razas/elfo-2.png": "3af425d5-53df-4fa9-9433-1f64ef42422d"
+  }
+}
