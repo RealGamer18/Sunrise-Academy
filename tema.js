@@ -358,6 +358,10 @@ body.sa-theme{--steel1:#151d28;--steel2:#0c1219;--rune:#d9a441;--ink-dark:#2b1d0
   .sa-wheel .cbtn[style*="--i:0;"]{width:100px;height:100px;transform:translate(-50%,-50%)!important;border-width:3px!important}
   .sa-wheel .cbtn.atk[style*="--i:0;"]{background:radial-gradient(circle at 50% 35%,#7a2a20,#2a0c09 75%)!important;border-color:#ff8a6a!important;box-shadow:0 0 22px #ff5a4a55,0 4px 14px #000a,inset 0 0 14px #000a}
   .sa-wheel .cbtn.atk b{font-size:13px!important}.sa-wheel .cbtn.atk b .sai{width:34px!important;height:34px!important}
+  /* Amanecer (límite) no tiene --i: va como píldora bajo la rueda, no encima de Atacar */
+  .sa-wheel:has(.cbtn.alba){margin-bottom:62px}
+  .sa-wheel .cbtn.alba{top:calc(100% + 8px)!important;width:auto!important;height:auto!important;min-width:150px;padding:8px 18px!important;border-radius:999px!important;transform:translateX(-50%)!important}
+  .sa-wheel .cbtn.alba b{flex-direction:row!important;gap:6px!important;font-size:14px!important}
   .sa-wheel .cbtn.mag{border-color:#5ab0ffaa!important}
   .sa-wheel .cbtn.run{border-color:#9aa3adaa!important}
   .sa-wheel .cbtn.god{border-color:#ffd98a!important;box-shadow:0 0 14px #ffd98a55!important}
